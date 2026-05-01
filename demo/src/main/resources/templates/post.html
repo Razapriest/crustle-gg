@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Post</title>
+</head>
+<body>
+
+<h1 th:text="${post.title}"></h1>
+
+<p>By <span th:text="${post.author}"></span></p>
+
+<img th:src="${post.imageUrl}" width="300"/>
+
+<h3>Deck List</h3>
+<pre th:text="${post.deckList}"></pre>
+
+<h3>Description</h3>
+<p th:text="${post.description}"></p>
+
+<a href="/">Back</a>
+
+</body>
+</html>

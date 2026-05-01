@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home</title>
+</head>
+<body>
+
+<h1>Deck Posts</h1>
+
+<a href="/post/create">Create Post</a>
+
+<hr>
+
+<div th:each="post : ${posts}">
+
+    <a th:href="@{'/post/' + ${post.id}}">
+
+        <h2 th:text="${post.title}"></h2>
+
+        <p th:text="${post.author}"></p>
+
+        <img th:src="${post.imageUrl}" width="200"/>
+
+    </a>
+
+    <hr>
+
+</div>
+
+</body>
+</html>

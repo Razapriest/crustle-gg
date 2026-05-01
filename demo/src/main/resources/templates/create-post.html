@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Deck Post</title>
+</head>
+<body>
+
+<h2>Create New Deck Post</h2>
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Deck</title>
+</head>
+<body>
+
+<h2>Create Deck Post</h2>
+
+<form action="/post/create" method="post">
+
+    <input type="text" name="title" placeholder="Deck Name" required />
+    <br><br>
+
+    <input type="text" name="imageUrl" placeholder="Image URL" required />
+    <br><br>
+
+    <textarea name="deckList" placeholder="Deck List" rows="10" cols="50" required></textarea>
+    <br><br>
+
+    <textarea name="description" placeholder="Description / Strategy" rows="5" cols="50"></textarea>
+    <br><br>
+
+    <button type="submit">Post Deck</button>
+
+</form>
+
+<br>
+<a href="/">Back to Home</a>
+
+</body>
+</html>
