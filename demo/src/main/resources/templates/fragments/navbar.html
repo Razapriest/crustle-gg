@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<div th:fragment="navbar">
+    <nav style="display:flex; justify-content:space-between; padding:10px; background:#eee;">
+
+        <!-- LEFT SIDE -->
+        <div>
+            <a href="/">Home</a>
+            <a href="/post/create" style="margin-left:10px;">Create Post</a>
+        </div>
+
+        <!-- RIGHT SIDE (LOGGED IN) -->
+        <div sec:authorize="isAuthenticated()">
+            Logged in as:
+            <span sec:authentication="name"></span>
+
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" style="margin-left:10px;">Logout</button>
+            </form>
+        </div>
+
+        <!-- RIGHT SIDE (NOT LOGGED IN) -->
+        <div sec:authorize="isAnonymous()">
+            <a href="/login">Login</a>
+            <a href="/register" style="margin-left:10px;">Register</a>
+        </div>
+
+    </nav>
+</div>
+
+</body>
+</html>

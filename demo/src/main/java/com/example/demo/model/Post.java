@@ -3,6 +3,10 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import java.util.List;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+
 @Entity
 @Table(name = "posts")
 public class Post {
@@ -24,6 +28,14 @@ public class Post {
     private String author;
 
     private LocalDateTime createdAt;
+
+    private String extraInfo;
+
+    private int likes = 0;
+    private int dislikes = 0;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    private java.util.List<Comment> comments;
 
     @PrePersist
     protected void onCreate() {
@@ -57,4 +69,36 @@ public class Post {
     public void setAuthor(String author) { this.author = author; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public String getExtraInfo() {
+        return extraInfo;
+    }
+
+    public void setExtraInfo(String extraInfo) {
+        this.extraInfo = extraInfo;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public int getLikes() {
+        return likes;
+    }
+
+    public void setLikes(int likes) {
+        this.likes = likes;
+    }
+
+    public int getDislikes() {
+        return dislikes;
+    }
+
+    public void setDislikes(int dislikes) {
+        this.dislikes = dislikes;
+    }
 }
