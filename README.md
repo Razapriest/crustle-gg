@@ -1,15 +1,15 @@
-# wp2-project-tournament-manager
-tournament manager web app for web programming 2 project
+# cruslte.gg
+Pokemon TCG deck and tournament recording website
 
-This web application serves as a tournament manager for trading card game tournaments (initially just the Pokemon TCG). The purpose of this project is for it to be used by 2 types of users: Organizers and Players.
-
-Organizers can:
--Run tournaments inside the app, by registering players and either making the pairings manually or generating them based on standing (The purpose of making the pairings manually would be if a sanctioned tournament is ran and the official app must be used, the organizer can later come and put the pairings here as well for documentation).
--Assign decks to each player, for the purpose of having statistics on deck popularity and matchups, and an ending standings table with the player's name, deck and score.
+This web application serves as a digital library for Pokemon TCG decks and tournaments, allowing players to publish their decks, alongside recording their tournament runs, matchups and notes. Organizers can also separately use the app to record entire tournaments and generate standings lists.
 
 Players can:
--Record their own tournament runs independently, only registering their deck, their opponent's deck and their score.
--Assign their run to a specific tournament, thus confirming results and helping the organizers with submitting decklists for each player.
--Keep track of their winrate, played decks, matchups and other statistics.
+- Post their decklists, for personal use, or to make them public and add notes or mini-guides;
+- Record their tournament runs, linking them with decklists, thus showing a specific deck's results;
+- Write up small tournament reports for each tournament and deck, creating a public resource for other players to find and play their lists.
 
-This project aims to combine 3 apps that people use into a single one: Limitless for running tournaments and finding decks (online only), Challonge for running tournaments and pairings physically, and Training Court for registering a player's individual matchups + The feature of saving a deck. If done correctly, this app could be used to run, organize and document local tournaments for the local tcg store that I go to in Bucharest, which now does things separately: the organizer runs the tournament on the official app and the standings table is made by a guy who goes around with a paper, writes down the decks, then takes a picture of the final standings and makes an excel spreadsheet at home, so his life would be easier :)
+Organizers can:
+- Record tournament results, by adding each player and deck into the system;
+- Generate a standings list, exportable as a csv, with names, images, deck names and scores (and, where applicable, decklists).
+
+This project aims to create a digital library of decks, different from the already existing limitlesstcg, which only records official, large-scale regional-level tournaments. With Crustle.gg, players would be able to post their locals lists, whether secret home-brew meta decks, for fun decks, or just netdecked lists, while also keeping track of their matchups, win-lose stats, changes to the lists and other notable things. Players would also be able to write up mini-guides for their decks, or respond to questions left by others regarding their deck.
