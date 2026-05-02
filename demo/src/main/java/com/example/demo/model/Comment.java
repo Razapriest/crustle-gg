@@ -2,6 +2,8 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 public class Comment {
 
@@ -12,6 +14,8 @@ public class Comment {
     private String content;
 
     private String author;
+
+    private LocalDateTime createdAt;
 
     @ManyToOne
     private Post post;
@@ -46,5 +50,13 @@ public class Comment {
 
     public void setPost(Post post) {
         this.post = post;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

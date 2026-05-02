@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
 
 import java.util.Optional;
 
@@ -48,6 +49,7 @@ public class PostController {
         post.setDescription(description);
         post.setImageUrl(imageUrl);
         post.setAuthor(auth.getName());
+        post.setCreatedAt(LocalDateTime.now());
 
         postRepository.save(post);
 
@@ -63,9 +65,19 @@ public class PostController {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
+        String currentUser = auth != null ? auth.getName() : null;
+
+        Integer userVote = 0;
+
+        if (currentUser != null) {
+            userVote = voteRepository.findByPostAndUsername(post, currentUser)
+                    .map(Vote::getValue)
+                    .orElse(0);
+        }
+
         model.addAttribute("post", post);
-        model.addAttribute("currentUser",
-                auth != null ? auth.getName() : null);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("userVote", userVote);
 
         return "post";
     }
@@ -211,6 +223,7 @@ public class PostController {
         comment.setContent(content);
         comment.setAuthor(auth.getName());
         comment.setPost(post);
+        comment.setCreatedAt(LocalDateTime.now());
 
         commentRepository.save(comment);
 

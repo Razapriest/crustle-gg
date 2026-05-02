@@ -5,27 +5,72 @@
 </head>
 <body>
 
+<!-- NAVBAR -->
 <div th:replace="fragments/navbar :: navbar"></div>
 
 <h1>Deck Posts</h1>
 
 <a href="/post/create">Create Post</a>
 
+<br><br>
+
+<!-- SORT OPTIONS -->
+<div>
+    <a th:href="@{/(sort='new', page=0)}">Newest</a>
+    |
+    <a th:href="@{/(sort='top', page=0)}">Top Rated</a>
+</div>
+
 <hr>
 
-<div th:each="post : ${posts}">
+<!-- POSTS -->
+<div th:each="post : ${posts.content}">
 
     <a th:href="@{'/post/' + ${post.id}}">
 
         <h2 th:text="${post.title}"></h2>
 
-        <p th:text="${post.author}"></p>
+        <p>
+            <span th:text="${post.author}"></span>
+            |
+            <span th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></span>
+        </p>
 
         <img th:src="${post.imageUrl}" width="200"/>
 
     </a>
 
+    <p>
+        👍 <span th:text="${post.likes}"></span>
+        |
+        👎 <span th:text="${post.dislikes}"></span>
+    </p>
+
     <hr>
+
+</div>
+
+<!-- PAGINATION -->
+<div>
+
+    <!-- PREVIOUS -->
+    <a th:if="${posts.hasPrevious()}"
+       th:href="@{/(page=${posts.number - 1}, sort=${sort})}">
+        Previous
+    </a>
+
+    <!-- CURRENT PAGE -->
+    <span>
+        Page <span th:text="${posts.number + 1}"></span>
+        of
+        <span th:text="${posts.totalPages}"></span>
+    </span>
+
+    <!-- NEXT -->
+    <a th:if="${posts.hasNext()}"
+       th:href="@{/(page=${posts.number + 1}, sort=${sort})}">
+        Next
+    </a>
 
 </div>
 

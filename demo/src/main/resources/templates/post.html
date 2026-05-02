@@ -11,7 +11,11 @@
 <!-- POST CONTENT -->
 <h1 th:text="${post.title}"></h1>
 
-<p>By <span th:text="${post.author}"></span></p>
+<p>
+    By <span th:text="${post.author}"></span>
+    |
+    <span th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></span>
+</p>
 
 <img th:src="${post.imageUrl}" width="300"/>
 
@@ -23,11 +27,17 @@
 
 <!-- LIKE / DISLIKE -->
 <form th:action="@{'/post/' + ${post.id} + '/like'}" method="post" style="display:inline;">
-    <button type="submit">👍 Like</button>
+    <button type="submit"
+            th:style="${userVote == 1} ? 'background-color:lightgreen;' : ''">
+        👍 Like
+    </button>
 </form>
 
 <form th:action="@{'/post/' + ${post.id} + '/dislike'}" method="post" style="display:inline;">
-    <button type="submit">👎 Dislike</button>
+    <button type="submit"
+            th:style="${userVote == -1} ? 'background-color:lightcoral;' : ''">
+        👎 Dislike
+    </button>
 </form>
 
 <p>Likes: <span th:text="${post.likes}"></span></p>
@@ -51,7 +61,8 @@
 
 <div th:each="c : ${post.comments}">
     <p>
-        <b th:text="${c.author}"></b>:
+        <b th:text="${c.author}"></b>
+        <span th:text="${#temporals.format(c.createdAt, 'dd MMM yyyy HH:mm')}"></span>:
         <span th:text="${c.content}"></span>
 
     <form th:if="${c.author == currentUser}"
