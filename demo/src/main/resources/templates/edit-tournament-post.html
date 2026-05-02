@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Tournament Post</title>
+</head>
+<body>
+
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<h2>Edit Tournament Post</h2>
+
+<form th:action="@{'/post/edit/' + ${post.id}}" method="post">
+
+    <!-- TITLE -->
+    <input type="text"
+           name="title"
+           th:value="${post.title}"
+           required />
+    <br><br>
+
+    <!-- IMAGE -->
+    <input type="text"
+           name="imageUrl"
+           th:value="${post.imageUrl}" />
+    <br><br>
+
+    <!-- DESCRIPTION -->
+    <textarea name="description"
+              rows="5"
+              cols="50"
+              th:text="${post.description}">
+    </textarea>
+
+    <br><br>
+
+    <h3>Players</h3>
+
+    <table border="1">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Archetype</th>
+            <th>Deck Link</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody id="body">
+
+        <tr th:each="e : ${post.entries}">
+
+            <!-- NAME -->
+            <td>
+                <input type="text"
+                       name="playerName"
+                       th:value="${e.playerName}"
+                       required />
+            </td>
+
+            <!-- ARCHETYPE -->
+            <td>
+                <select name="archetype"
+                        class="archetype-select"
+                        th:attr="data-selected=${e.archetype}">
+                </select>
+            </td>
+
+            <!-- DECK LINK -->
+            <td>
+                <input type="text"
+                       name="deckLink"
+                       th:value="${e.deckLink}" />
+            </td>
+
+            <!-- ACTIONS -->
+            <td>
+                <button type="button" onclick="moveUp(this)">⬆</button>
+                <button type="button" onclick="moveDown(this)">⬇</button>
+                <button type="button" onclick="this.closest('tr').remove()">X</button>
+            </td>
+
+        </tr>
+
+        </tbody>
+    </table>
+
+    <br>
+
+    <button type="button" onclick="addRow()">Add Player</button>
+
+    <br><br>
+
+    <button type="submit">Save Changes</button>
+
+</form>
+
+<!-- ===================== -->
+<!-- THYMELEAF OPTIONS SOURCE (SAME AS CREATE) -->
+<!-- ===================== -->
+<select id="archetypeSelectTemplate" style="display:none;">
+    <option th:each="a : ${archetypes}"
+            th:value="${a}"
+            th:text="${a}">
+    </option>
+</select>
+
+<!-- ===================== -->
+<!-- ROW TEMPLATE -->
+<!-- ===================== -->
+<template id="rowTemplate">
+    <tr>
+        <td>
+            <input type="text" name="playerName" required />
+        </td>
+
+        <td>
+            <select name="archetype" class="archetype-select"></select>
+        </td>
+
+        <td>
+            <input type="text" name="deckLink" />
+        </td>
+
+        <td>
+            <button type="button" onclick="moveUp(this)">⬆</button>
+            <button type="button" onclick="moveDown(this)">⬇</button>
+            <button type="button" onclick="this.closest('tr').remove()">X</button>
+        </td>
+    </tr>
+</template>
+
+<script>
+    function addRow() {
+        const template = document.getElementById("rowTemplate");
+        const clone = template.content.cloneNode(true);
+
+        const options = document.getElementById("archetypeSelectTemplate").innerHTML;
+        clone.querySelector(".archetype-select").innerHTML = options;
+
+        document.getElementById("body").appendChild(clone);
+    }
+
+    // initialize existing rows (IMPORTANT FIX)
+    function initRows() {
+        const options = document.getElementById("archetypeSelectTemplate").innerHTML;
+
+        document.querySelectorAll(".archetype-select").forEach(sel => {
+            const selected = sel.getAttribute("data-selected");
+
+            sel.innerHTML = options;
+
+            if (selected) {
+                sel.value = selected;
+            }
+        });
+    }
+
+    function moveUp(btn) {
+        const row = btn.closest("tr");
+        const prev = row.previousElementSibling;
+        if (prev) row.parentNode.insertBefore(row, prev);
+    }
+
+    function moveDown(btn) {
+        const row = btn.closest("tr");
+        const next = row.nextElementSibling;
+        if (next) row.parentNode.insertBefore(next, row);
+    }
+
+    // initial setup
+    initRows();
+    addRow();
+</script>
+
+</body>
+</html>

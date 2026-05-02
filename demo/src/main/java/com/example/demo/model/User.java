@@ -17,6 +17,11 @@ public class User {
 
     private String role;
 
+    private String profilePicture;
+
+    @Column(length = 1000)
+    private String description;
+
     public Long getId() {
         return id;
     }
@@ -48,4 +53,22 @@ public class User {
     public void setRole(String role) {
         this.role = role;
     }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+
 }

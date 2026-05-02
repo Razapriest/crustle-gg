@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Profile</title>
+</head>
+<body>
+
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<h1 th:text="${profileUser.username}"></h1>
+
+<img th:src="${profileUser.profilePicture}" width="150"/>
+
+<p>Score: <span th:text="${score}"></span></p>
+<p th:text="${profileUser.description}"></p>
+
+<!-- ✅ EDIT PROFILE BUTTON (ONLY OWNER) -->
+<div th:if="${currentUser == profileUser.username}">
+    <a th:href="@{'/user/edit/' + ${profileUser.username}}">
+        Edit Profile
+    </a>
+</div>
+
+<hr>
+
+<h2>User Posts</h2>
+
+<div th:each="post : ${posts}">
+
+    <a th:href="@{'/post/view/' + ${post.id}}">
+        <h3 th:text="${post.title}"></h3>
+    </a>
+
+    <p th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></p>
+
+    <img th:src="${post.imageUrl}" width="200"/>
+
+    <hr>
+
+</div>
+
+</body>
+</html>

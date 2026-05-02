@@ -2,19 +2,43 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Home</title>
+
+    <style>
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .column {
+            flex: 1;
+        }
+
+        .post-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .buttons {
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
 
 <!-- NAVBAR -->
 <div th:replace="fragments/navbar :: navbar"></div>
 
-<h1>Deck Posts</h1>
+<h1>Home</h1>
 
-<a href="/post/create">Create Post</a>
+<!-- CREATE BUTTONS -->
+<div class="buttons">
+    <a href="/post/create-deck-post">Create Deck Post</a>
+    <a href="/post/create-tournament-post">Create Tournament Post</a>
+</div>
 
-<br><br>
-
-<!-- SORT OPTIONS -->
+<!-- SORT -->
 <div>
     <a th:href="@{/(sort='new', page=0)}">Newest</a>
     |
@@ -23,50 +47,92 @@
 
 <hr>
 
-<!-- POSTS -->
-<div th:each="post : ${posts.content}">
+<div class="container">
 
-    <a th:href="@{'/post/' + ${post.id}}">
+    <!-- ========================= -->
+    <!-- DECK POSTS COLUMN -->
+    <!-- ========================= -->
+    <div class="column">
+        <h2>Deck Posts</h2>
 
-        <h2 th:text="${post.title}"></h2>
+        <div th:each="post : ${posts.content}"
+             th:if="${post.type.name() == 'DECK'}"
+             class="post-card">
 
-        <p>
-            <span th:text="${post.author}"></span>
-            |
-            <span th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></span>
-        </p>
+            <a th:href="@{'/post/view/' + ${post.id}}"
+               style="text-decoration:none; color:black;">
 
-        <img th:src="${post.imageUrl}" width="200"/>
+                <h3>
+                    <span th:text="${post.title}"></span>
+                    <span th:if="${post.archetype != null}"
+                          th:text="'(' + ${post.archetype} + ')'"></span>
+                </h3>
 
-    </a>
+                <p>
+                    By <span th:text="${post.author.username}"></span>
+                </p>
 
-    <p>
-        👍 <span th:text="${post.likes}"></span>
-        |
-        👎 <span th:text="${post.dislikes}"></span>
-    </p>
+                <img th:src="${post.imageUrl != null ? post.imageUrl : 'https://via.placeholder.com/150'}"
+                     width="150"/>
 
-    <hr>
+            </a>
+
+            <p>
+                👍 <span th:text="${post.likes}"></span>
+                👎 <span th:text="${post.dislikes}"></span>
+            </p>
+
+        </div>
+    </div>
+
+    <!-- ========================= -->
+    <!-- TOURNAMENT POSTS COLUMN -->
+    <!-- ========================= -->
+    <div class="column">
+        <h2>Tournament Posts</h2>
+
+        <div th:each="post : ${posts.content}"
+             th:if="${post.type.name() == 'TOURNAMENT'}"
+             class="post-card">
+
+            <a th:href="@{'/post/view/' + ${post.id}}"
+               style="text-decoration:none; color:black;">
+
+                <h3 th:text="${post.title}"></h3>
+
+                <p>
+                    By <span th:text="${post.author.username}"></span>
+                </p>
+
+                <!-- CSV / STANDINGS PREVIEW -->
+                <pre th:text="${post.deckList}"
+                     style="background:#f5f5f5; padding:8px;"></pre>
+
+            </a>
+
+            <p>
+                👍 <span th:text="${post.likes}"></span>
+                👎 <span th:text="${post.dislikes}"></span>
+            </p>
+
+        </div>
+    </div>
 
 </div>
 
 <!-- PAGINATION -->
-<div>
+<div style="margin-top:20px;">
 
-    <!-- PREVIOUS -->
     <a th:if="${posts.hasPrevious()}"
        th:href="@{/(page=${posts.number - 1}, sort=${sort})}">
         Previous
     </a>
 
-    <!-- CURRENT PAGE -->
     <span>
         Page <span th:text="${posts.number + 1}"></span>
-        of
-        <span th:text="${posts.totalPages}"></span>
+        of <span th:text="${posts.totalPages}"></span>
     </span>
 
-    <!-- NEXT -->
     <a th:if="${posts.hasNext()}"
        th:href="@{/(page=${posts.number + 1}, sort=${sort})}">
         Next

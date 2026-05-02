@@ -8,47 +8,145 @@
 <!-- NAVBAR -->
 <div th:replace="fragments/navbar :: navbar"></div>
 
-<!-- POST CONTENT -->
 <h1 th:text="${post.title}"></h1>
 
-<p>
-    By <span th:text="${post.author}"></span>
-    |
-    <span th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></span>
-</p>
+<!-- AUTHOR INFO -->
+<div style="display:flex; align-items:center; gap:10px;">
 
-<img th:src="${post.imageUrl}" width="300"/>
+    <a th:href="@{'/user/' + ${post.author.username}}">
+        <img th:src="${post.author.profilePicture}"
+             width="50"
+             height="50"
+             style="border-radius:50%; object-fit:cover; border:1px solid #ccc;">
+    </a>
 
-<h3>Deck List</h3>
-<pre th:text="${post.deckList}"></pre>
+    <div>
+        <p style="margin:0;">
+            By
+            <a th:href="@{'/user/' + ${post.author.username}}"
+               th:text="${post.author.username}"></a>
+        </p>
 
+        <small th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></small>
+    </div>
+
+</div>
+
+<br>
+
+<!-- ========================= -->
+<!-- POST IMAGE -->
+<!-- ========================= -->
+<img th:src="${post.imageUrl != null ? post.imageUrl : 'https://via.placeholder.com/300'}"
+     width="300"/>
+
+<br><br>
+
+<!-- ========================= -->
+<!-- DECK POST -->
+<!-- ========================= -->
+<div th:if="${post.type.name() == 'DECK'}">
+
+    <h3>Deck List</h3>
+    <pre th:text="${post.deckList}"></pre>
+
+</div>
+
+<!-- ========================= -->
+<!-- TOURNAMENT POST -->
+<!-- ========================= -->
+<div th:if="${post.type.name() == 'TOURNAMENT'}">
+
+    <h3>Standings</h3>
+
+    <table border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th>Placement</th>
+            <th>Player</th>
+            <th>Archetype</th>
+            <th>Deck</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="e : ${post.entries}">
+
+            <td th:text="${e.placement}"></td>
+
+            <td th:text="${e.playerName}"></td>
+
+            <td th:text="${e.archetype}"></td>
+
+            <td>
+                <a th:if="${e.deckLink != null and !#strings.isEmpty(e.deckLink)}"
+                   th:href="${e.deckLink}"
+                   target="_blank">
+                    Open Deck
+                </a>
+
+                <span th:if="${e.deckLink == null or #strings.isEmpty(e.deckLink)}">
+                    -
+                </span>
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<br>
+
+<!-- ========================= -->
+<!-- DESCRIPTION -->
+<!-- ========================= -->
 <h3>Description</h3>
 <p th:text="${post.description}"></p>
 
+<!-- ========================= -->
 <!-- LIKE / DISLIKE -->
-<form th:action="@{'/post/' + ${post.id} + '/like'}" method="post" style="display:inline;">
+<!-- ========================= -->
+<form th:action="@{'/post/' + ${post.id} + '/like'}"
+      method="post"
+      style="display:inline;">
+
     <button type="submit"
             th:style="${userVote == 1} ? 'background-color:lightgreen;' : ''">
         👍 Like
     </button>
+
 </form>
 
-<form th:action="@{'/post/' + ${post.id} + '/dislike'}" method="post" style="display:inline;">
+<form th:action="@{'/post/' + ${post.id} + '/dislike'}"
+      method="post"
+      style="display:inline;">
+
     <button type="submit"
             th:style="${userVote == -1} ? 'background-color:lightcoral;' : ''">
         👎 Dislike
     </button>
+
 </form>
 
 <p>Likes: <span th:text="${post.likes}"></span></p>
 <p>Dislikes: <span th:text="${post.dislikes}"></span></p>
 
-<!-- EDIT / DELETE (OWNER ONLY) -->
-<div th:if="${post.author == currentUser}">
+<!-- ========================= -->
+<!-- EDIT / DELETE -->
+<!-- ========================= -->
+<div th:if="${post.author.username == currentUser}">
 
-    <a th:href="@{'/post/edit/' + ${post.id}}">Edit</a>
+    <!-- EDIT BUTTON -->
+    <a th:href="@{'/post/edit/' + ${post.id}}"
+       style="display:inline-block; margin-right:10px;">
+        <button type="button">Edit</button>
+    </a>
 
-    <form th:action="@{'/post/delete/' + ${post.id}}" method="post">
+    <!-- DELETE BUTTON -->
+    <form th:action="@{'/post/delete/' + ${post.id}}"
+          method="post"
+          style="display:inline;">
         <button type="submit">Delete</button>
     </form>
 
@@ -56,31 +154,57 @@
 
 <hr>
 
+<!-- ========================= -->
 <!-- COMMENTS -->
+<!-- ========================= -->
 <h3>Comments</h3>
 
-<div th:each="c : ${post.comments}">
-    <p>
-        <b th:text="${c.author}"></b>
-        <span th:text="${#temporals.format(c.createdAt, 'dd MMM yyyy HH:mm')}"></span>:
-        <span th:text="${c.content}"></span>
+<div th:each="c : ${post.comments}"
+     style="border-bottom:1px solid #ccc; padding:10px 0;">
 
-    <form th:if="${c.author == currentUser}"
-          th:action="@{'/comment/delete/' + ${c.id}}"
-          method="post"
-          style="display:inline;">
+    <div style="display:flex; gap:10px;">
 
-        <button type="submit">Delete</button>
+        <a th:href="@{'/user/' + ${c.author.username}}">
+            <img th:src="${c.author.profilePicture}"
+                 width="40"
+                 height="40"
+                 style="border-radius:50%; object-fit:cover; border:1px solid #ccc;">
+        </a>
 
-    </form>
-    </p>
+        <div>
+
+            <p style="margin:0;">
+                <b>
+                    <a th:href="@{'/user/' + ${c.author.username}}"
+                       th:text="${c.author.username}"></a>
+                </b>
+
+                <small th:text="${#temporals.format(c.createdAt, 'dd MMM yyyy HH:mm')}"></small>
+            </p>
+
+            <p th:text="${c.content}"></p>
+
+            <form th:if="${c.author.username == currentUser}"
+                  th:action="@{'/comment/delete/' + ${c.id}}"
+                  method="post">
+
+                <button type="submit">Delete</button>
+
+            </form>
+
+        </div>
+
+    </div>
+
 </div>
 
+<!-- ========================= -->
 <!-- ADD COMMENT -->
-<form th:action="@{'/post/' + ${post.id} + '/comment'}" method="post">
+<!-- ========================= -->
+<form th:action="@{'/post/' + ${post.id} + '/comment'}"
+      method="post">
 
-    <input type="text" name="content" placeholder="Write a comment..." />
-
+    <input type="text" name="content" placeholder="Write a comment..." required />
     <button type="submit">Post</button>
 
 </form>

@@ -25,7 +25,14 @@ public class HomeController {
             @RequestParam(defaultValue = "0") int page,
             Model model) {
 
-        Pageable pageable = PageRequest.of(page, 5);
+        // safety fixes
+        int safePage = Math.max(0, page);
+
+        if (!sort.equals("top")) {
+            sort = "new";
+        }
+
+        Pageable pageable = PageRequest.of(safePage, 5);
 
         Page<Post> posts;
 

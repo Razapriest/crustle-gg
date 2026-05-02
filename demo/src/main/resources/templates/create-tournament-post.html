@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Tournament Post</title>
+</head>
+<body>
+
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<h2>Create Tournament Post</h2>
+
+<form th:action="@{/post/create-tournament-post}" method="post">
+
+    <!-- CSRF -->
+    <input type="hidden"
+           th:if="${_csrf != null}"
+           th:name="${_csrf.parameterName}"
+           th:value="${_csrf.token}" />
+
+    <!-- TITLE -->
+    <input type="text" name="title" placeholder="Tournament Name" required />
+    <br><br>
+
+    <!-- IMAGE -->
+    <input type="text" name="imageUrl" placeholder="Image URL (optional)" />
+    <br><br>
+
+    <!-- DESCRIPTION -->
+    <textarea name="description"
+              placeholder="Tournament description / summary"
+              rows="5"
+              cols="50"></textarea>
+
+    <br><br>
+
+    <h3>Players</h3>
+
+    <table border="1">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Archetype</th>
+            <th>Deck Link</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody id="body"></tbody>
+    </table>
+
+    <br>
+
+    <button type="button" onclick="addRow()">Add Player</button>
+
+    <br><br>
+
+    <button type="submit">Create Tournament</button>
+</form>
+
+<!-- ===================== -->
+<!-- THYMELEAF OPTIONS SOURCE -->
+<!-- ===================== -->
+<select id="archetypeSelectTemplate" style="display:none;">
+    <option th:each="a : ${archetypes}"
+            th:value="${a}"
+            th:text="${a}">
+    </option>
+</select>
+
+<!-- ===================== -->
+<!-- ROW TEMPLATE -->
+<!-- ===================== -->
+<template id="rowTemplate">
+    <tr>
+        <td>
+            <input type="text" name="playerName" required />
+        </td>
+
+        <td>
+            <select name="archetype" class="archetype-select"></select>
+        </td>
+
+        <td>
+            <input type="text" name="deckLink" placeholder="/post/ID or URL" />
+        </td>
+
+        <td>
+            <button type="button" onclick="moveUp(this)">⬆</button>
+            <button type="button" onclick="moveDown(this)">⬇</button>
+            <button type="button" onclick="this.closest('tr').remove()">X</button>
+        </td>
+    </tr>
+</template>
+
+<script>
+    function addRow() {
+        const template = document.getElementById("rowTemplate");
+        const clone = template.content.cloneNode(true);
+
+        // get rendered options from Thymeleaf
+        const options = document.getElementById("archetypeSelectTemplate").innerHTML;
+
+        // inject options into new select
+        clone.querySelector(".archetype-select").innerHTML = options;
+
+        document.getElementById("body").appendChild(clone);
+    }
+
+    function moveUp(btn) {
+        const row = btn.closest("tr");
+        const prev = row.previousElementSibling;
+        if (prev) {
+            row.parentNode.insertBefore(row, prev);
+        }
+    }
+
+    function moveDown(btn) {
+        const row = btn.closest("tr");
+        const next = row.nextElementSibling;
+        if (next) {
+            row.parentNode.insertBefore(next, row);
+        }
+    }
+
+    // initial row
+    addRow();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Profile</title>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div th:replace="fragments/navbar :: navbar"></div>
+
+<h1>Edit Profile</h1>
+
+<form th:action="@{'/user/edit/' + ${user.username}}" method="post">
+
+    <!-- PROFILE PICTURE -->
+    <label>Profile Picture URL</label><br>
+    <input type="text"
+           name="profilePicture"
+           th:value="${user.profilePicture}"
+           placeholder="Enter image URL or leave empty for default"
+           style="width:300px;">
+    <br><br>
+
+    <!-- DESCRIPTION -->
+    <label>Description</label><br>
+    <textarea name="description"
+              rows="5"
+              cols="40"
+              placeholder="Tell something about yourself..."
+              th:text="${user.description}">
+    </textarea>
+    <br><br>
+
+    <button type="submit">Save Changes</button>
+
+</form>
+
+<br>
+
+<!-- BACK LINK -->
+<a th:href="@{'/user/' + ${user.username}}">← Back to Profile</a>
+
+</body>
+</html>
