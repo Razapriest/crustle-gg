@@ -2,6 +2,48 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Create Tournament Post</title>
+
+    <style>
+        .archetype-picker {
+            position: relative;
+            width: 220px;
+        }
+
+        .archetype-search {
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+        }
+
+        .archetype-dropdown {
+            border: 1px solid #ccc;
+            max-height: 220px;
+            overflow-y: auto;
+            display: none;
+            position: absolute;
+            width: 100%;
+            background: white;
+            z-index: 1000;
+        }
+
+        .archetype-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            cursor: pointer;
+        }
+
+        .archetype-option:hover {
+            background-color: #f0f0f0;
+        }
+
+        .archetype-option img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
 
@@ -55,60 +97,148 @@
     <br><br>
 
     <button type="submit">Create Tournament</button>
+
 </form>
 
 <!-- ===================== -->
-<!-- THYMELEAF OPTIONS SOURCE -->
+<!-- ARCHETYPE DATA SOURCE -->
 <!-- ===================== -->
-<select id="archetypeSelectTemplate" style="display:none;">
-    <option th:each="a : ${archetypes}"
-            th:value="${a}"
-            th:text="${a}">
-    </option>
-</select>
+<div id="archetypeData" style="display:none;">
+
+    <div th:each="a : ${archetypes}"
+         class="archetype-data-item"
+         th:data-value="${a.name()}"
+         th:data-name="${a.displayName}"
+         th:data-icon="${a.iconPath}">
+    </div>
+
+</div>
 
 <!-- ===================== -->
 <!-- ROW TEMPLATE -->
 <!-- ===================== -->
 <template id="rowTemplate">
     <tr>
+
+        <!-- PLAYER -->
         <td>
             <input type="text" name="playerName" required />
         </td>
 
+        <!-- ARCHETYPE -->
         <td>
-            <select name="archetype" class="archetype-select"></select>
+            <div class="archetype-picker">
+
+                <input type="text"
+                       class="archetype-search"
+                       placeholder="Search archetype..."
+                       autocomplete="off"
+                       required />
+
+                <input type="hidden"
+                       name="archetype"
+                       class="selected-archetype"
+                       required />
+
+                <div class="archetype-dropdown"></div>
+
+            </div>
         </td>
 
+        <!-- DECK LINK -->
         <td>
-            <input type="text" name="deckLink" placeholder="/post/ID or URL" />
+            <input type="text"
+                   name="deckLink"
+                   placeholder="/post/ID or URL" />
         </td>
 
+        <!-- ACTIONS -->
         <td>
             <button type="button" onclick="moveUp(this)">⬆</button>
             <button type="button" onclick="moveDown(this)">⬇</button>
             <button type="button" onclick="this.closest('tr').remove()">X</button>
         </td>
+
     </tr>
 </template>
 
 <script>
+    function buildDropdown(dropdown) {
+        dropdown.innerHTML = "";
+
+        const archetypes = document.querySelectorAll(".archetype-data-item");
+
+        archetypes.forEach(a => {
+            const option = document.createElement("div");
+            option.className = "archetype-option";
+
+            option.dataset.value = a.dataset.value;
+            option.dataset.name = a.dataset.name;
+
+            option.innerHTML = `
+                <img src="${a.dataset.icon}" alt="${a.dataset.name}">
+                <span>${a.dataset.name}</span>
+            `;
+
+            dropdown.appendChild(option);
+        });
+    }
+
+    function setupArchetypePicker(container) {
+        const search = container.querySelector(".archetype-search");
+        const hidden = container.querySelector(".selected-archetype");
+        const dropdown = container.querySelector(".archetype-dropdown");
+
+        buildDropdown(dropdown);
+
+        const options = dropdown.querySelectorAll(".archetype-option");
+
+        search.addEventListener("focus", () => {
+            dropdown.style.display = "block";
+        });
+
+        search.addEventListener("input", function () {
+            const value = this.value.toLowerCase();
+
+            dropdown.style.display = "block";
+
+            options.forEach(option => {
+                option.style.display =
+                    option.dataset.name.toLowerCase().includes(value)
+                        ? "flex"
+                        : "none";
+            });
+        });
+
+        options.forEach(option => {
+            option.addEventListener("click", function () {
+                search.value = this.dataset.name;
+                hidden.value = this.dataset.value;
+                dropdown.style.display = "none";
+            });
+        });
+
+        document.addEventListener("click", function (e) {
+            if (!container.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+    }
+
     function addRow() {
         const template = document.getElementById("rowTemplate");
         const clone = template.content.cloneNode(true);
 
-        // get rendered options from Thymeleaf
-        const options = document.getElementById("archetypeSelectTemplate").innerHTML;
-
-        // inject options into new select
-        clone.querySelector(".archetype-select").innerHTML = options;
-
         document.getElementById("body").appendChild(clone);
+
+        const newRow = document.getElementById("body").lastElementChild;
+        setupArchetypePicker(newRow.querySelector(".archetype-picker"));
     }
 
     function moveUp(btn) {
         const row = btn.closest("tr");
         const prev = row.previousElementSibling;
+
         if (prev) {
             row.parentNode.insertBefore(row, prev);
         }
@@ -117,12 +247,13 @@
     function moveDown(btn) {
         const row = btn.closest("tr");
         const next = row.nextElementSibling;
+
         if (next) {
             row.parentNode.insertBefore(next, row);
         }
     }
 
-    // initial row
+    // Initial row
     addRow();
 </script>
 

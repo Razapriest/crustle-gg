@@ -3,10 +3,9 @@ package com.example.demo.controller;
 import com.example.demo.model.*;
 import com.example.demo.repository.CommentRepository;
 import com.example.demo.repository.PostRepository;
-import com.example.demo.repository.VoteRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.VoteRepository;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +35,7 @@ public class PostController {
     }
 
     // =========================
-    // VIEW POST (FIXED ROUTE)
+    // VIEW POST
     // =========================
     @GetMapping("/post/view/{id}")
     public String viewPost(@PathVariable Long id,
@@ -59,34 +58,37 @@ public class PostController {
         model.addAttribute("post", post);
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("userVote", userVote);
+        model.addAttribute("archetypes", Archetype.values());
 
         return "post";
     }
 
     // =========================
-    // CREATE DECK POST PAGE
+    // CREATE DECK PAGE
     // =========================
     @GetMapping("/post/create-deck-post")
-    public String createDeckPage() {
+    public String createDeckPage(Model model) {
+        model.addAttribute("archetypes", Archetype.values());
         return "create-deck-post";
     }
 
     // =========================
-    // CREATE TOURNAMENT POST PAGE
+    // CREATE TOURNAMENT PAGE
     // =========================
     @GetMapping("/post/create-tournament-post")
     public String showTournamentForm(Model model) {
-
         model.addAttribute("archetypes", Archetype.values());
-
         return "create-tournament-post";
     }
 
+    // =========================
+    // CREATE DECK POST
+    // =========================
     @PostMapping("/post/create-deck-post")
     public String createDeckPost(@RequestParam String title,
                                  @RequestParam String deckList,
-                                 @RequestParam String description,
-                                 @RequestParam String imageUrl,
+                                 @RequestParam(required = false) String description,
+                                 @RequestParam(required = false) String imageUrl,
                                  @RequestParam Archetype archetype,
                                  Authentication auth) {
 
@@ -109,6 +111,9 @@ public class PostController {
         return "redirect:/";
     }
 
+    // =========================
+    // CREATE TOURNAMENT POST
+    // =========================
     @PostMapping("/post/create-tournament-post")
     public String createTournamentPost(
             @RequestParam String title,
@@ -116,9 +121,11 @@ public class PostController {
             @RequestParam("playerName") List<String> playerNames,
             @RequestParam("archetype") List<Archetype> archetypes,
             @RequestParam("deckLink") List<String> deckLinks,
-            @RequestParam String description,
+            @RequestParam(required = false) String description,
             Authentication auth
     ) {
+
+        if (auth == null) return "redirect:/login";
 
         User user = userRepository.findByUsername(auth.getName())
                 .orElseThrow();
@@ -126,62 +133,64 @@ public class PostController {
         Post tournament = new Post();
         tournament.setTitle(title);
         tournament.setImageUrl(imageUrl);
+        tournament.setDescription(description);
         tournament.setAuthor(user);
         tournament.setType(PostType.TOURNAMENT);
-
-        List<TournamentEntry> entries = new ArrayList<>();
 
         int placement = 1;
 
         for (int i = 0; i < playerNames.size(); i++) {
 
-            if (playerNames.get(i) == null || playerNames.get(i).isBlank()) continue;
+            if (playerNames.get(i) == null || playerNames.get(i).isBlank()) {
+                continue;
+            }
 
             TournamentEntry entry = new TournamentEntry();
             entry.setPlayerName(playerNames.get(i));
             entry.setArchetype(archetypes.get(i));
             entry.setDeckLink(deckLinks.get(i));
+            entry.setPlacement(placement++);
 
-            entry.setPlacement(placement++); // 👈 ORDER = RANK
-
-            entry.setTournament(tournament);
-            entries.add(entry);
+            tournament.addEntry(entry);
         }
-
-        tournament.setEntries(entries);
-        tournament.setDescription(description);
 
         postRepository.save(tournament);
 
         return "redirect:/";
     }
 
-
+    // =========================
+    // EDIT PAGE
+    // =========================
     @GetMapping("/post/edit/{id}")
-    public String editPostPage(@PathVariable Long id, Model model) {
+    public String editPostPage(@PathVariable Long id,
+                               Model model,
+                               Authentication auth) {
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
+        if (auth == null || !post.getAuthor().getUsername().equals(auth.getName())) {
+            return "redirect:/?error=unauthorized";
+        }
+
         model.addAttribute("post", post);
+        model.addAttribute("archetypes", Archetype.values());
 
-        if (post.getType() == PostType.TOURNAMENT) {
-            model.addAttribute("archetypes", Archetype.values());
-            return "edit-tournament-post";
-        }
-
-        if (post.getType() == PostType.DECK) {
-            return "edit-deck-post";
-        }
-
-        return "redirect:/?error=invalid-type";
+        return post.getType() == PostType.DECK
+                ? "edit-deck-post"
+                : "edit-tournament-post";
     }
 
+    // =========================
+    // EDIT POST
+    // =========================
     @PostMapping("/post/edit/{id}")
     public String editPost(
             @PathVariable Long id,
             @RequestParam String title,
             @RequestParam(required = false) String deckList,
+            @RequestParam(required = false) Archetype postArchetype,
             @RequestParam(required = false) String extraInfo,
             @RequestParam(required = false) String imageUrl,
             @RequestParam(required = false) String description,
@@ -204,39 +213,47 @@ public class PostController {
         post.setImageUrl(imageUrl);
         post.setDescription(description);
 
+        // =========================
+        // DECK EDIT
+        // =========================
         if (post.getType() == PostType.DECK) {
-
             post.setDeckList(deckList);
             post.setExtraInfo(extraInfo);
+
+            if (postArchetype != null) {
+                post.setArchetype(postArchetype);
+            }
         }
 
+        // =========================
+        // TOURNAMENT EDIT
+        // =========================
         if (post.getType() == PostType.TOURNAMENT) {
 
-            // 🔥 IMPORTANT: break orphan link safely
-            if (post.getEntries() != null) {
-                post.getEntries().clear();
+            List<TournamentEntry> updatedEntries = new ArrayList<>();
+
+            if (playerName != null) {
+
+                int placement = 1;
+
+                for (int i = 0; i < playerName.size(); i++) {
+
+                    if (playerName.get(i) == null || playerName.get(i).isBlank()) {
+                        continue;
+                    }
+
+                    TournamentEntry entry = new TournamentEntry();
+                    entry.setPlayerName(playerName.get(i));
+                    entry.setArchetype(archetype.get(i));
+                    entry.setDeckLink(deckLink.get(i));
+                    entry.setPlacement(placement++);
+
+                    updatedEntries.add(entry);
+                }
             }
 
-            List<TournamentEntry> newEntries = new ArrayList<>();
-
-            int placement = 1;
-
-            for (int i = 0; i < playerName.size(); i++) {
-
-                if (playerName.get(i) == null || playerName.get(i).isBlank()) continue;
-
-                TournamentEntry e = new TournamentEntry();
-                e.setPlayerName(playerName.get(i));
-                e.setArchetype(archetype.get(i));
-                e.setDeckLink(deckLink.get(i));
-
-                e.setPlacement(placement++);
-                e.setTournament(post);
-
-                newEntries.add(e);
-            }
-
-            post.getEntries().addAll(newEntries);
+            // SAFE orphanRemoval-compatible update
+            post.setEntries(updatedEntries);
         }
 
         postRepository.save(post);
@@ -274,31 +291,34 @@ public class PostController {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        String user = auth.getName();
+        String username = auth.getName();
 
-        Optional<Vote> existing = voteRepository.findByPostAndUsername(post, user);
+        Optional<Vote> existing = voteRepository.findByPostAndUsername(post, username);
 
         if (existing.isPresent()) {
-            Vote v = existing.get();
 
-            if (v.getValue() == 1) {
-                voteRepository.delete(v);
+            Vote vote = existing.get();
+
+            if (vote.getValue() == 1) {
+                voteRepository.delete(vote);
                 post.setLikes(Math.max(0, post.getLikes() - 1));
+
             } else {
-                v.setValue(1);
-                voteRepository.save(v);
+                vote.setValue(1);
+                voteRepository.save(vote);
 
                 post.setLikes(post.getLikes() + 1);
                 post.setDislikes(Math.max(0, post.getDislikes() - 1));
             }
 
         } else {
-            Vote v = new Vote();
-            v.setPost(post);
-            v.setUsername(user);
-            v.setValue(1);
 
-            voteRepository.save(v);
+            Vote vote = new Vote();
+            vote.setPost(post);
+            vote.setUsername(username);
+            vote.setValue(1);
+
+            voteRepository.save(vote);
             post.setLikes(post.getLikes() + 1);
         }
 
@@ -318,31 +338,34 @@ public class PostController {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        String user = auth.getName();
+        String username = auth.getName();
 
-        Optional<Vote> existing = voteRepository.findByPostAndUsername(post, user);
+        Optional<Vote> existing = voteRepository.findByPostAndUsername(post, username);
 
         if (existing.isPresent()) {
-            Vote v = existing.get();
 
-            if (v.getValue() == -1) {
-                voteRepository.delete(v);
+            Vote vote = existing.get();
+
+            if (vote.getValue() == -1) {
+                voteRepository.delete(vote);
                 post.setDislikes(Math.max(0, post.getDislikes() - 1));
+
             } else {
-                v.setValue(-1);
-                voteRepository.save(v);
+                vote.setValue(-1);
+                voteRepository.save(vote);
 
                 post.setDislikes(post.getDislikes() + 1);
                 post.setLikes(Math.max(0, post.getLikes() - 1));
             }
 
         } else {
-            Vote v = new Vote();
-            v.setPost(post);
-            v.setUsername(user);
-            v.setValue(-1);
 
-            voteRepository.save(v);
+            Vote vote = new Vote();
+            vote.setPost(post);
+            vote.setUsername(username);
+            vote.setValue(-1);
+
+            voteRepository.save(vote);
             post.setDislikes(post.getDislikes() + 1);
         }
 
@@ -352,7 +375,7 @@ public class PostController {
     }
 
     // =========================
-    // COMMENTS
+    // ADD COMMENT
     // =========================
     @PostMapping("/post/{id}/comment")
     public String addComment(@PathVariable Long id,
@@ -370,10 +393,11 @@ public class PostController {
         Comment comment = new Comment();
         comment.setContent(content);
         comment.setAuthor(user);
-        comment.setPost(post);
         comment.setCreatedAt(LocalDateTime.now());
 
-        commentRepository.save(comment);
+        post.addComment(comment);
+
+        postRepository.save(post);
 
         return "redirect:/post/view/" + id;
     }

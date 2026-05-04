@@ -2,6 +2,15 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Profile</title>
+
+    <style>
+        .post-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
 
@@ -14,7 +23,7 @@
 <p>Score: <span th:text="${score}"></span></p>
 <p th:text="${profileUser.description}"></p>
 
-<!-- ✅ EDIT PROFILE BUTTON (ONLY OWNER) -->
+<!-- EDIT PROFILE -->
 <div th:if="${currentUser == profileUser.username}">
     <a th:href="@{'/user/edit/' + ${profileUser.username}}">
         Edit Profile
@@ -25,17 +34,49 @@
 
 <h2>User Posts</h2>
 
-<div th:each="post : ${posts}">
+<!-- ========================= -->
+<!-- USER POSTS -->
+<!-- ========================= -->
+<div th:each="post : ${posts}" class="post-card">
 
-    <a th:href="@{'/post/view/' + ${post.id}}">
-        <h3 th:text="${post.title}"></h3>
+    <a th:href="@{'/post/view/' + ${post.id}}"
+       style="text-decoration:none; color:black;">
+
+        <h3>
+            <span th:text="${post.title}"></span>
+
+            <!-- DECK ARCHETYPE -->
+            <span th:if="${post.type.name() == 'DECK' and post.archetype != null}"
+                  th:text="' (' + ${post.archetype} + ')'">
+            </span>
+        </h3>
+
+        <p th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></p>
+
+        <img th:src="${post.imageUrl != null ? post.imageUrl : 'https://via.placeholder.com/150'}"
+             width="200"/>
+
+        <!-- ========================= -->
+        <!-- TOURNAMENT PREVIEW -->
+        <!-- ========================= -->
+        <div th:if="${post.type.name() == 'TOURNAMENT' and post.entries != null}">
+            <ul>
+                <li th:each="e, iter : ${post.entries}"
+                    th:if="${iter.index < 3}">
+                    <span th:text="${e.placement}"></span>.
+                    <span th:text="${e.playerName}"></span>
+                    -
+                    <span th:text="${e.archetype}"></span>
+                </li>
+            </ul>
+        </div>
+
     </a>
 
-    <p th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></p>
-
-    <img th:src="${post.imageUrl}" width="200"/>
-
-    <hr>
+    <p>
+        👍 <span th:text="${post.likes}"></span>
+        👎 <span th:text="${post.dislikes}"></span>
+    </p>
 
 </div>
 

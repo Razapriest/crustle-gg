@@ -2,6 +2,48 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Edit Deck Post</title>
+
+    <style>
+        .archetype-picker {
+            position: relative;
+            width: 320px;
+        }
+
+        .archetype-search {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .archetype-dropdown {
+            border: 1px solid #ccc;
+            max-height: 220px;
+            overflow-y: auto;
+            display: none;
+            position: absolute;
+            width: 100%;
+            background: white;
+            z-index: 1000;
+        }
+
+        .archetype-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .archetype-option:hover {
+            background-color: #f0f0f0;
+        }
+
+        .archetype-option img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
 
@@ -11,6 +53,7 @@
 
 <form th:action="@{'/post/edit/' + ${post.id}}" method="post">
 
+    <!-- TITLE -->
     <label>Title</label><br>
     <input type="text"
            name="title"
@@ -18,12 +61,14 @@
            required />
     <br><br>
 
+    <!-- IMAGE -->
     <label>Image URL</label><br>
     <input type="text"
            name="imageUrl"
            th:value="${post.imageUrl}" />
     <br><br>
 
+    <!-- DECK LIST -->
     <label>Deck List</label><br>
     <textarea name="deckList"
               rows="10"
@@ -34,6 +79,49 @@
 
     <br><br>
 
+    <!-- ARCHETYPE -->
+    <label>Archetype:</label><br>
+
+    <div class="archetype-picker">
+
+        <!-- Visible Search -->
+        <input type="text"
+               id="archetypeSearch"
+               class="archetype-search"
+               placeholder="Search archetype..."
+               autocomplete="off"
+               th:value="${post.archetype != null ? post.archetype.displayName : ''}"
+               required />
+
+        <!-- Hidden Actual Enum -->
+        <input type="hidden"
+               name="archetype"
+               id="selectedArchetype"
+               th:value="${post.archetype != null ? post.archetype.name() : ''}"
+               required />
+
+        <!-- Dropdown -->
+        <div id="archetypeDropdown" class="archetype-dropdown">
+
+            <div th:each="a : ${archetypes}"
+                 class="archetype-option"
+                 th:data-value="${a.name()}"
+                 th:data-name="${a.displayName}">
+
+                <img th:src="${a.iconPath}"
+                     th:alt="${a.displayName}" />
+
+                <span th:text="${a.displayName}"></span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <br><br>
+
+    <!-- DESCRIPTION -->
     <label>Description</label><br>
     <textarea name="description"
               rows="5"
@@ -50,6 +138,49 @@
 <br>
 
 <a th:href="@{'/post/' + ${post.id}}">← Back</a>
+
+<script>
+    const searchInput = document.getElementById("archetypeSearch");
+    const dropdown = document.getElementById("archetypeDropdown");
+    const hiddenInput = document.getElementById("selectedArchetype");
+    const options = document.querySelectorAll(".archetype-option");
+
+    // Show dropdown
+    searchInput.addEventListener("focus", () => {
+        dropdown.style.display = "block";
+    });
+
+    // Filter
+    searchInput.addEventListener("input", function () {
+        const value = this.value.toLowerCase();
+
+        dropdown.style.display = "block";
+
+        options.forEach(option => {
+            const name = option.dataset.name.toLowerCase();
+
+            option.style.display = name.includes(value)
+                ? "flex"
+                : "none";
+        });
+    });
+
+    // Select
+    options.forEach(option => {
+        option.addEventListener("click", function () {
+            searchInput.value = this.dataset.name;
+            hiddenInput.value = this.dataset.value;
+            dropdown.style.display = "none";
+        });
+    });
+
+    // Close on outside click
+    document.addEventListener("click", function (e) {
+        if (!document.querySelector(".archetype-picker").contains(e.target)) {
+            dropdown.style.display = "none";
+        }
+    });
+</script>
 
 </body>
 </html>

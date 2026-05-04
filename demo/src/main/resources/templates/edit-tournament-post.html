@@ -2,6 +2,48 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Edit Tournament Post</title>
+
+    <style>
+        .archetype-picker {
+            position: relative;
+            width: 220px;
+        }
+
+        .archetype-search {
+            width: 100%;
+            padding: 6px;
+            box-sizing: border-box;
+        }
+
+        .archetype-dropdown {
+            border: 1px solid #ccc;
+            max-height: 220px;
+            overflow-y: auto;
+            display: none;
+            position: absolute;
+            width: 100%;
+            background: white;
+            z-index: 1000;
+        }
+
+        .archetype-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            cursor: pointer;
+        }
+
+        .archetype-option:hover {
+            background-color: #f0f0f0;
+        }
+
+        .archetype-option img {
+            width: 22px;
+            height: 22px;
+            object-fit: contain;
+        }
+    </style>
 </head>
 <body>
 
@@ -47,6 +89,7 @@
 
         <tbody id="body">
 
+        <!-- EXISTING PLAYERS -->
         <tr th:each="e : ${post.entries}">
 
             <!-- NAME -->
@@ -59,10 +102,24 @@
 
             <!-- ARCHETYPE -->
             <td>
-                <select name="archetype"
-                        class="archetype-select"
-                        th:attr="data-selected=${e.archetype}">
-                </select>
+                <div class="archetype-picker">
+
+                    <input type="text"
+                           class="archetype-search"
+                           placeholder="Search archetype..."
+                           autocomplete="off"
+                           th:value="${e.archetype != null ? e.archetype.displayName : ''}"
+                           required />
+
+                    <input type="hidden"
+                           name="archetype"
+                           class="selected-archetype"
+                           th:value="${e.archetype != null ? e.archetype.name() : ''}"
+                           required />
+
+                    <div class="archetype-dropdown"></div>
+
+                </div>
             </td>
 
             <!-- DECK LINK -->
@@ -95,30 +152,51 @@
 </form>
 
 <!-- ===================== -->
-<!-- THYMELEAF OPTIONS SOURCE (SAME AS CREATE) -->
+<!-- ARCHETYPE DATA SOURCE -->
 <!-- ===================== -->
-<select id="archetypeSelectTemplate" style="display:none;">
-    <option th:each="a : ${archetypes}"
-            th:value="${a}"
-            th:text="${a}">
-    </option>
-</select>
+<div id="archetypeData" style="display:none;">
+
+    <div th:each="a : ${archetypes}"
+         class="archetype-data-item"
+         th:data-value="${a.name()}"
+         th:data-name="${a.displayName}"
+         th:data-icon="${a.iconPath}">
+    </div>
+
+</div>
 
 <!-- ===================== -->
 <!-- ROW TEMPLATE -->
 <!-- ===================== -->
 <template id="rowTemplate">
     <tr>
+
         <td>
             <input type="text" name="playerName" required />
         </td>
 
         <td>
-            <select name="archetype" class="archetype-select"></select>
+            <div class="archetype-picker">
+
+                <input type="text"
+                       class="archetype-search"
+                       placeholder="Search archetype..."
+                       autocomplete="off"
+                       required />
+
+                <input type="hidden"
+                       name="archetype"
+                       class="selected-archetype"
+                       required />
+
+                <div class="archetype-dropdown"></div>
+
+            </div>
         </td>
 
         <td>
-            <input type="text" name="deckLink" />
+            <input type="text"
+                   name="deckLink" />
         </td>
 
         <td>
@@ -126,50 +204,113 @@
             <button type="button" onclick="moveDown(this)">⬇</button>
             <button type="button" onclick="this.closest('tr').remove()">X</button>
         </td>
+
     </tr>
 </template>
 
 <script>
+    function buildDropdown(dropdown) {
+        dropdown.innerHTML = "";
+
+        const archetypes = document.querySelectorAll(".archetype-data-item");
+
+        archetypes.forEach(a => {
+            const option = document.createElement("div");
+            option.className = "archetype-option";
+
+            option.dataset.value = a.dataset.value;
+            option.dataset.name = a.dataset.name;
+
+            option.innerHTML = `
+                <img src="${a.dataset.icon}" alt="${a.dataset.name}">
+                <span>${a.dataset.name}</span>
+            `;
+
+            dropdown.appendChild(option);
+        });
+    }
+
+    function setupArchetypePicker(container) {
+        const search = container.querySelector(".archetype-search");
+        const hidden = container.querySelector(".selected-archetype");
+        const dropdown = container.querySelector(".archetype-dropdown");
+
+        buildDropdown(dropdown);
+
+        function refreshOptions() {
+            dropdown.querySelectorAll(".archetype-option").forEach(option => {
+
+                option.addEventListener("click", function () {
+                    search.value = this.dataset.name;
+                    hidden.value = this.dataset.value;
+                    dropdown.style.display = "none";
+                });
+
+            });
+        }
+
+        refreshOptions();
+
+        search.addEventListener("focus", () => {
+            dropdown.style.display = "block";
+        });
+
+        search.addEventListener("input", function () {
+            const value = this.value.toLowerCase();
+
+            dropdown.style.display = "block";
+
+            dropdown.querySelectorAll(".archetype-option").forEach(option => {
+                option.style.display =
+                    option.dataset.name.toLowerCase().includes(value)
+                        ? "flex"
+                        : "none";
+            });
+        });
+
+        document.addEventListener("click", function (e) {
+            if (!container.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+    }
+
+    function initExistingRows() {
+        document.querySelectorAll(".archetype-picker").forEach(picker => {
+            setupArchetypePicker(picker);
+        });
+    }
+
     function addRow() {
         const template = document.getElementById("rowTemplate");
         const clone = template.content.cloneNode(true);
 
-        const options = document.getElementById("archetypeSelectTemplate").innerHTML;
-        clone.querySelector(".archetype-select").innerHTML = options;
-
         document.getElementById("body").appendChild(clone);
-    }
 
-    // initialize existing rows (IMPORTANT FIX)
-    function initRows() {
-        const options = document.getElementById("archetypeSelectTemplate").innerHTML;
-
-        document.querySelectorAll(".archetype-select").forEach(sel => {
-            const selected = sel.getAttribute("data-selected");
-
-            sel.innerHTML = options;
-
-            if (selected) {
-                sel.value = selected;
-            }
-        });
+        const newRow = document.getElementById("body").lastElementChild;
+        setupArchetypePicker(newRow.querySelector(".archetype-picker"));
     }
 
     function moveUp(btn) {
         const row = btn.closest("tr");
         const prev = row.previousElementSibling;
-        if (prev) row.parentNode.insertBefore(row, prev);
+
+        if (prev) {
+            row.parentNode.insertBefore(row, prev);
+        }
     }
 
     function moveDown(btn) {
         const row = btn.closest("tr");
         const next = row.nextElementSibling;
-        if (next) row.parentNode.insertBefore(next, row);
+
+        if (next) {
+            row.parentNode.insertBefore(next, row);
+        }
     }
 
-    // initial setup
-    initRows();
-    addRow();
+    // Initialize existing rows
+    initExistingRows();
 </script>
 
 </body>

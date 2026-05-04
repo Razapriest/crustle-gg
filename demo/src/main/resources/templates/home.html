@@ -27,12 +27,11 @@
 </head>
 <body>
 
-<!-- NAVBAR -->
 <div th:replace="fragments/navbar :: navbar"></div>
 
 <h1>Home</h1>
 
-<!-- CREATE BUTTONS -->
+<!-- CREATE -->
 <div class="buttons">
     <a href="/post/create-deck-post">Create Deck Post</a>
     <a href="/post/create-tournament-post">Create Tournament Post</a>
@@ -50,7 +49,7 @@
 <div class="container">
 
     <!-- ========================= -->
-    <!-- DECK POSTS COLUMN -->
+    <!-- DECK POSTS -->
     <!-- ========================= -->
     <div class="column">
         <h2>Deck Posts</h2>
@@ -64,13 +63,13 @@
 
                 <h3>
                     <span th:text="${post.title}"></span>
+
                     <span th:if="${post.archetype != null}"
-                          th:text="'(' + ${post.archetype} + ')'"></span>
+                          th:text="' (' + ${post.archetype} + ')'">
+                    </span>
                 </h3>
 
-                <p>
-                    By <span th:text="${post.author.username}"></span>
-                </p>
+                <p>By <span th:text="${post.author.username}"></span></p>
 
                 <img th:src="${post.imageUrl != null ? post.imageUrl : 'https://via.placeholder.com/150'}"
                      width="150"/>
@@ -86,7 +85,7 @@
     </div>
 
     <!-- ========================= -->
-    <!-- TOURNAMENT POSTS COLUMN -->
+    <!-- TOURNAMENT POSTS -->
     <!-- ========================= -->
     <div class="column">
         <h2>Tournament Posts</h2>
@@ -100,13 +99,20 @@
 
                 <h3 th:text="${post.title}"></h3>
 
-                <p>
-                    By <span th:text="${post.author.username}"></span>
-                </p>
+                <p>By <span th:text="${post.author.username}"></span></p>
 
-                <!-- CSV / STANDINGS PREVIEW -->
-                <pre th:text="${post.deckList}"
-                     style="background:#f5f5f5; padding:8px;"></pre>
+                <!-- TOP 3 PREVIEW (safe) -->
+                <div th:if="${post.entries != null}">
+                    <ul>
+                        <li th:each="e, iter : ${post.entries}"
+                            th:if="${iter.index < 3}">
+                            <span th:text="${e.placement}"></span>.
+                            <span th:text="${e.playerName}"></span>
+                            -
+                            <span th:text="${e.archetype}"></span>
+                        </li>
+                    </ul>
+                </div>
 
             </a>
 

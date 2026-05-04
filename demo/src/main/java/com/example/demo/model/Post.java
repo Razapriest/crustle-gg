@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,27 +19,28 @@ public class Post {
     // TYPE OF POST
     // =========================
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private PostType type = PostType.DECK;
 
+    // Main archetype for DECK posts
     @Enumerated(EnumType.STRING)
     private Archetype archetype;
 
-    // For DECK posts → deck list text
-    // For TOURNAMENT posts → optional null or unused
-    @Column(length = 5000)
+    // For DECK posts
+    @Column(length = 10000)
     private String deckList;
 
-    // For TOURNAMENT posts → CSV-like standings data
-    // For DECK posts → can stay null
-    @Column(length = 5000)
+    // Legacy / optional
+    @Column(length = 10000)
     private String tournamentDataCsv;
 
-    @Column(length = 5000)
+    @Column(length = 10000)
     private String description;
 
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
     private User author;
 
     private LocalDateTime createdAt;
@@ -48,15 +50,83 @@ public class Post {
     private int likes = 0;
     private int dislikes = 0;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
-    private List<Comment> comments;
+    // =========================
+    // COMMENTS
+    // =========================
+    @OneToMany(
+            mappedBy = "post",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("createdAt ASC")
+    private List<Comment> comments = new ArrayList<>();
 
-    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<TournamentEntry> entries;
+    // =========================
+    // TOURNAMENT ENTRIES
+    // =========================
+    @OneToMany(
+            mappedBy = "tournament",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("placement ASC")
+    private List<TournamentEntry> entries = new ArrayList<>();
 
+    // =========================
+    // TIMESTAMP
+    // =========================
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    // =========================
+    // HELPER METHODS
+    // =========================
+
+    public void addEntry(TournamentEntry entry) {
+        entries.add(entry);
+        entry.setTournament(this);
+    }
+
+    public void removeEntry(TournamentEntry entry) {
+        entries.remove(entry);
+        entry.setTournament(null);
+    }
+
+    /**
+     * IMPORTANT:
+     * Never replace Hibernate-managed collection directly.
+     * Clear + re-add avoids orphanRemoval crash.
+     */
+    public void setEntries(List<TournamentEntry> newEntries) {
+        this.entries.clear();
+
+        if (newEntries != null) {
+            for (TournamentEntry entry : newEntries) {
+                addEntry(entry);
+            }
+        }
+    }
+
+    public void addComment(Comment comment) {
+        comments.add(comment);
+        comment.setPost(this);
+    }
+
+    public void removeComment(Comment comment) {
+        comments.remove(comment);
+        comment.setPost(null);
+    }
+
+    public void setComments(List<Comment> newComments) {
+        this.comments.clear();
+
+        if (newComments != null) {
+            for (Comment comment : newComments) {
+                addComment(comment);
+            }
+        }
     }
 
     // =========================
@@ -85,6 +155,14 @@ public class Post {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Archetype getArchetype() {
+        return archetype;
+    }
+
+    public void setArchetype(Archetype archetype) {
+        this.archetype = archetype;
     }
 
     public String getDeckList() {
@@ -143,14 +221,6 @@ public class Post {
         this.extraInfo = extraInfo;
     }
 
-    public List<Comment> getComments() {
-        return comments;
-    }
-
-    public void setComments(List<Comment> comments) {
-        this.comments = comments;
-    }
-
     public int getLikes() {
         return likes;
     }
@@ -167,19 +237,11 @@ public class Post {
         this.dislikes = dislikes;
     }
 
-    public Archetype getArchetype() {
-        return archetype;
-    }
-
-    public void setArchetype(Archetype archetype) {
-        this.archetype = archetype;
+    public List<Comment> getComments() {
+        return comments;
     }
 
     public List<TournamentEntry> getEntries() {
         return entries;
-    }
-
-    public void setEntries(List<TournamentEntry> entries) {
-        this.entries = entries;
     }
 }
