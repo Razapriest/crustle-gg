@@ -23,6 +23,21 @@
         .buttons {
             margin-bottom: 15px;
         }
+
+        .archetype-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .archetype-box img {
+            width: 24px;
+            height: 24px;
+        }
+
+        form {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -37,12 +52,32 @@
     <a href="/post/create-tournament-post">Create Tournament Post</a>
 </div>
 
-<!-- SORT -->
-<div>
-    <a th:href="@{/(sort='new', page=0)}">Newest</a>
-    |
-    <a th:href="@{/(sort='top', page=0)}">Top Rated</a>
-</div>
+<hr>
+
+<!-- ========================= -->
+<!-- FILTERS -->
+<!-- ========================= -->
+<form method="get" action="/">
+
+    <!-- Deck Archetype Filter -->
+    <label>Deck Archetype:</label>
+    <select name="archetype">
+        <option value="">All</option>
+        <option th:each="a : ${T(com.example.demo.model.Archetype).values()}"
+                th:value="${a.name()}"
+                th:text="${a.displayName}">
+        </option>
+    </select>
+
+    <!-- Shared Sort (applies to BOTH decks + tournaments) -->
+    <label>Sort:</label>
+    <select name="sort">
+        <option value="new" th:selected="${sort == 'new'}">Newest</option>
+        <option value="top" th:selected="${sort == 'top'}">Top Rated</option>
+    </select>
+
+    <button type="submit">Apply</button>
+</form>
 
 <hr>
 
@@ -54,20 +89,18 @@
     <div class="column">
         <h2>Deck Posts</h2>
 
-        <div th:each="post : ${posts.content}"
-             th:if="${post.type.name() == 'DECK'}"
-             class="post-card">
+        <div th:each="post : ${decks}" class="post-card">
 
             <a th:href="@{'/post/view/' + ${post.id}}"
                style="text-decoration:none; color:black;">
 
-                <h3>
-                    <span th:text="${post.title}"></span>
+                <h3 th:text="${post.title}"></h3>
 
-                    <span th:if="${post.archetype != null}"
-                          th:text="' (' + ${post.archetype} + ')'">
-                    </span>
-                </h3>
+                <!-- ICON + DISPLAY NAME -->
+                <div th:if="${post.archetype != null}" class="archetype-box">
+                    <img th:src="@{${post.archetype.iconPath}}" />
+                    <span th:text="${post.archetype.displayName}"></span>
+                </div>
 
                 <p>By <span th:text="${post.author.username}"></span></p>
 
@@ -90,9 +123,7 @@
     <div class="column">
         <h2>Tournament Posts</h2>
 
-        <div th:each="post : ${posts.content}"
-             th:if="${post.type.name() == 'TOURNAMENT'}"
-             class="post-card">
+        <div th:each="post : ${tournaments}" class="post-card">
 
             <a th:href="@{'/post/view/' + ${post.id}}"
                style="text-decoration:none; color:black;">
@@ -101,7 +132,7 @@
 
                 <p>By <span th:text="${post.author.username}"></span></p>
 
-                <!-- TOP 3 PREVIEW (safe) -->
+                <!-- TOP 3 PREVIEW -->
                 <div th:if="${post.entries != null}">
                     <ul>
                         <li th:each="e, iter : ${post.entries}"
@@ -123,26 +154,6 @@
 
         </div>
     </div>
-
-</div>
-
-<!-- PAGINATION -->
-<div style="margin-top:20px;">
-
-    <a th:if="${posts.hasPrevious()}"
-       th:href="@{/(page=${posts.number - 1}, sort=${sort})}">
-        Previous
-    </a>
-
-    <span>
-        Page <span th:text="${posts.number + 1}"></span>
-        of <span th:text="${posts.totalPages}"></span>
-    </span>
-
-    <a th:if="${posts.hasNext()}"
-       th:href="@{/(page=${posts.number + 1}, sort=${sort})}">
-        Next
-    </a>
 
 </div>
 

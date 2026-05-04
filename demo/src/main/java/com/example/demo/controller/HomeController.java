@@ -1,14 +1,17 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.Archetype;
 import com.example.demo.model.Post;
+import com.example.demo.model.PostType;
 import com.example.demo.repository.PostRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class HomeController {
@@ -22,28 +25,51 @@ public class HomeController {
     @GetMapping("/")
     public String home(
             @RequestParam(defaultValue = "new") String sort,
-            @RequestParam(defaultValue = "0") int page,
-            Model model) {
+            @RequestParam(required = false) String archetype,
+            Model model
+    ) {
 
-        // safety fixes
-        int safePage = Math.max(0, page);
+        List<Post> allPosts = postRepository.findAll();
 
-        if (!sort.equals("top")) {
-            sort = "new";
-        }
+        // =========================
+        // FILTER DECKS
+        // =========================
+        List<Post> decks = allPosts.stream()
+                .filter(p -> p.getType() == PostType.DECK)
+                .filter(p -> archetype == null || archetype.isEmpty()
+                        || (p.getArchetype() != null
+                        && p.getArchetype().name().equals(archetype)))
+                .collect(Collectors.toList());
 
-        Pageable pageable = PageRequest.of(safePage, 5);
+        // =========================
+        // FILTER TOURNAMENTS
+        // =========================
+        List<Post> tournaments = allPosts.stream()
+                .filter(p -> p.getType() == PostType.TOURNAMENT)
+                .collect(Collectors.toList());
 
-        Page<Post> posts;
-
+        // =========================
+        // SORT DECKS
+        // =========================
         if (sort.equals("top")) {
-            posts = postRepository.findAllByOrderByLikesDesc(pageable);
+            decks.sort((a, b) -> Integer.compare(b.getLikes(), a.getLikes()));
         } else {
-            posts = postRepository.findAllByOrderByCreatedAtDesc(pageable);
+            decks.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
         }
 
-        model.addAttribute("posts", posts);
+        // =========================
+        // SORT TOURNAMENTS
+        // =========================
+        if (sort.equals("top")) {
+            tournaments.sort((a, b) -> Integer.compare(b.getLikes(), a.getLikes()));
+        } else {
+            tournaments.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        }
+
+        model.addAttribute("decks", decks);
+        model.addAttribute("tournaments", tournaments);
         model.addAttribute("sort", sort);
+        model.addAttribute("archetype", archetype);
 
         return "home";
     }
