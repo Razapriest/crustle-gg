@@ -33,10 +33,14 @@
         .archetype-box img {
             width: 24px;
             height: 24px;
+            object-fit: contain;
         }
 
-        form {
-            margin-bottom: 10px;
+        .post-image {
+            width: 150px;
+            height: auto;
+            margin-top: 8px;
+            border-radius: 6px;
         }
     </style>
 </head>
@@ -46,7 +50,6 @@
 
 <h1>Home</h1>
 
-<!-- CREATE -->
 <div class="buttons">
     <a href="/post/create-deck-post">Create Deck Post</a>
     <a href="/post/create-tournament-post">Create Tournament Post</a>
@@ -54,12 +57,8 @@
 
 <hr>
 
-<!-- ========================= -->
-<!-- FILTERS -->
-<!-- ========================= -->
 <form method="get" action="/">
 
-    <!-- Deck Archetype Filter -->
     <label>Deck Archetype:</label>
     <select name="archetype">
         <option value="">All</option>
@@ -69,7 +68,6 @@
         </option>
     </select>
 
-    <!-- Shared Sort (applies to BOTH decks + tournaments) -->
     <label>Sort:</label>
     <select name="sort">
         <option value="new" th:selected="${sort == 'new'}">Newest</option>
@@ -96,16 +94,18 @@
 
                 <h3 th:text="${post.title}"></h3>
 
-                <!-- ICON + DISPLAY NAME -->
                 <div th:if="${post.archetype != null}" class="archetype-box">
-                    <img th:src="@{${post.archetype.iconPath}}" />
+                    <img th:src="${post.archetype.iconPath}" />
                     <span th:text="${post.archetype.displayName}"></span>
                 </div>
 
                 <p>By <span th:text="${post.author.username}"></span></p>
 
-                <img th:src="${post.imageUrl != null ? post.imageUrl : 'https://via.placeholder.com/150'}"
-                     width="150"/>
+                <!-- FIXED IMAGE -->
+                <img class="post-image"
+                     th:src="${post.imagePath != null
+                              ? '/uploads/' + post.imagePath
+                              : '/uploads/default.png'}" />
 
             </a>
 
@@ -132,7 +132,12 @@
 
                 <p>By <span th:text="${post.author.username}"></span></p>
 
-                <!-- TOP 3 PREVIEW -->
+                <!-- FIXED IMAGE -->
+                <img class="post-image"
+                     th:src="${post.imagePath != null
+                              ? '/uploads/' + post.imagePath
+                              : '/uploads/default.png'}" />
+
                 <div th:if="${post.entries != null}">
                     <ul>
                         <li th:each="e, iter : ${post.entries}"

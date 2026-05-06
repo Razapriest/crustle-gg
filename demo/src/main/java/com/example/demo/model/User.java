@@ -10,17 +10,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(nullable = false)
     private String password;
 
     private String role;
 
-    private String profilePicture;
+    // =========================
+    // STORES FILE PATH (NOT URL)
+    // Example: /uploads/user_12.png
+    // =========================
+    @Column(length = 500)
+    private String profileImagePath;
 
     @Column(length = 1000)
     private String description;
+
+    // =========================
+    // GETTERS / SETTERS
+    // =========================
 
     public Long getId() {
         return id;
@@ -54,12 +64,12 @@ public class User {
         this.role = role;
     }
 
-    public String getProfilePicture() {
-        return profilePicture;
+    public String getProfileImagePath() {
+        return profileImagePath;
     }
 
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
+    public void setProfileImagePath(String profileImagePath) {
+        this.profileImagePath = profileImagePath;
     }
 
     public String getDescription() {
@@ -70,5 +80,13 @@ public class User {
         this.description = description;
     }
 
-
+    // =========================
+    // SAFE FALLBACK FOR UI
+    // =========================
+    public String getProfileImage() {
+        if (profileImagePath == null || profileImagePath.isBlank()) {
+            return "/images/default-avatar.png";
+        }
+        return profileImagePath;
+    }
 }

@@ -43,6 +43,14 @@
             height: 22px;
             object-fit: contain;
         }
+
+        .preview-img {
+            margin-top: 10px;
+            width: 150px;
+            height: auto;
+            border-radius: 6px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -51,7 +59,9 @@
 
 <h2>Edit Tournament Post</h2>
 
-<form th:action="@{'/post/edit/' + ${post.id}}" method="post">
+<form th:action="@{'/post/edit/' + ${post.id}}"
+      method="post"
+      enctype="multipart/form-data">
 
     <!-- TITLE -->
     <input type="text"
@@ -60,11 +70,26 @@
            required />
     <br><br>
 
-    <!-- IMAGE -->
-    <input type="text"
-           name="imageUrl"
-           th:value="${post.imageUrl}" />
+    <!-- IMAGE UPLOAD -->
+    <label>Change Image</label><br>
+    <input type="file" name="imageFile" accept="image/*" />
     <br><br>
+
+    <!-- CURRENT IMAGE -->
+    <div th:if="${post.imagePath != null}">
+        <p>Current image:</p>
+        <img class="preview-img"
+             th:src="@{'/uploads/' + ${post.imagePath}}" />
+    </div>
+
+    <!-- fallback -->
+    <div th:if="${post.imagePath == null}">
+        <p>Current image:</p>
+        <img class="preview-img"
+             src="/uploads/default.png" />
+    </div>
+
+    <br>
 
     <!-- DESCRIPTION -->
     <textarea name="description"
@@ -83,13 +108,13 @@
             <th>Name</th>
             <th>Archetype</th>
             <th>Deck Link</th>
+            <th>Score</th>
             <th>Actions</th>
         </tr>
         </thead>
 
         <tbody id="body">
 
-        <!-- EXISTING PLAYERS -->
         <tr th:each="e : ${post.entries}">
 
             <!-- NAME -->
@@ -107,8 +132,8 @@
                     <input type="text"
                            class="archetype-search"
                            placeholder="Search archetype..."
-                           autocomplete="off"
                            th:value="${e.archetype != null ? e.archetype.displayName : ''}"
+                           autocomplete="off"
                            required />
 
                     <input type="hidden"
@@ -127,6 +152,14 @@
                 <input type="text"
                        name="deckLink"
                        th:value="${e.deckLink}" />
+            </td>
+
+            <!-- SCORE -->
+            <td>
+                <input type="text"
+                       name="score"
+                       placeholder="3-1-0"
+                       th:value="${e.score}" />
             </td>
 
             <!-- ACTIONS -->
@@ -151,23 +184,17 @@
 
 </form>
 
-<!-- ===================== -->
-<!-- ARCHETYPE DATA SOURCE -->
-<!-- ===================== -->
+<!-- ARCHETYPE DATA -->
 <div id="archetypeData" style="display:none;">
-
     <div th:each="a : ${archetypes}"
          class="archetype-data-item"
          th:data-value="${a.name()}"
          th:data-name="${a.displayName}"
          th:data-icon="${a.iconPath}">
     </div>
-
 </div>
 
-<!-- ===================== -->
-<!-- ROW TEMPLATE -->
-<!-- ===================== -->
+<!-- TEMPLATE -->
 <template id="rowTemplate">
     <tr>
 
@@ -195,8 +222,11 @@
         </td>
 
         <td>
-            <input type="text"
-                   name="deckLink" />
+            <input type="text" name="deckLink" />
+        </td>
+
+        <td>
+            <input type="text" name="score" placeholder="3-1-0" />
         </td>
 
         <td>
@@ -212,9 +242,7 @@
     function buildDropdown(dropdown) {
         dropdown.innerHTML = "";
 
-        const archetypes = document.querySelectorAll(".archetype-data-item");
-
-        archetypes.forEach(a => {
+        document.querySelectorAll(".archetype-data-item").forEach(a => {
             const option = document.createElement("div");
             option.className = "archetype-option";
 
@@ -222,7 +250,7 @@
             option.dataset.name = a.dataset.name;
 
             option.innerHTML = `
-                <img src="${a.dataset.icon}" alt="${a.dataset.name}">
+                <img src="${a.dataset.icon}">
                 <span>${a.dataset.name}</span>
             `;
 
@@ -237,19 +265,13 @@
 
         buildDropdown(dropdown);
 
-        function refreshOptions() {
-            dropdown.querySelectorAll(".archetype-option").forEach(option => {
-
-                option.addEventListener("click", function () {
-                    search.value = this.dataset.name;
-                    hidden.value = this.dataset.value;
-                    dropdown.style.display = "none";
-                });
-
+        dropdown.querySelectorAll(".archetype-option").forEach(option => {
+            option.addEventListener("click", function () {
+                search.value = this.dataset.name;
+                hidden.value = this.dataset.value;
+                dropdown.style.display = "none";
             });
-        }
-
-        refreshOptions();
+        });
 
         search.addEventListener("focus", () => {
             dropdown.style.display = "block";
@@ -257,8 +279,6 @@
 
         search.addEventListener("input", function () {
             const value = this.value.toLowerCase();
-
-            dropdown.style.display = "block";
 
             dropdown.querySelectorAll(".archetype-option").forEach(option => {
                 option.style.display =
@@ -268,49 +288,38 @@
             });
         });
 
-        document.addEventListener("click", function (e) {
+        document.addEventListener("click", e => {
             if (!container.contains(e.target)) {
                 dropdown.style.display = "none";
             }
         });
     }
 
-    function initExistingRows() {
-        document.querySelectorAll(".archetype-picker").forEach(picker => {
-            setupArchetypePicker(picker);
-        });
+    function initRows() {
+        document.querySelectorAll(".archetype-picker").forEach(setupArchetypePicker);
     }
 
     function addRow() {
-        const template = document.getElementById("rowTemplate");
-        const clone = template.content.cloneNode(true);
-
+        const clone = document.getElementById("rowTemplate").content.cloneNode(true);
         document.getElementById("body").appendChild(clone);
 
-        const newRow = document.getElementById("body").lastElementChild;
-        setupArchetypePicker(newRow.querySelector(".archetype-picker"));
+        const row = document.getElementById("body").lastElementChild;
+        setupArchetypePicker(row.querySelector(".archetype-picker"));
     }
 
     function moveUp(btn) {
         const row = btn.closest("tr");
         const prev = row.previousElementSibling;
-
-        if (prev) {
-            row.parentNode.insertBefore(row, prev);
-        }
+        if (prev) row.parentNode.insertBefore(row, prev);
     }
 
     function moveDown(btn) {
         const row = btn.closest("tr");
         const next = row.nextElementSibling;
-
-        if (next) {
-            row.parentNode.insertBefore(next, row);
-        }
+        if (next) row.parentNode.insertBefore(next, row);
     }
 
-    // Initialize existing rows
-    initExistingRows();
+    initRows();
 </script>
 
 </body>

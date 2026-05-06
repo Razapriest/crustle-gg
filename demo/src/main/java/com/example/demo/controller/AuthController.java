@@ -5,12 +5,22 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Controller
 public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private static final String UPLOAD_DIR = "uploads/";
 
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder) {
@@ -31,7 +41,7 @@ public class AuthController {
     @PostMapping("/register")
     public String registerUser(@RequestParam String username,
                                @RequestParam String password,
-                               @RequestParam(required = false) String profilePicture) {
+                               @RequestParam(required = false) MultipartFile profileImage) {
 
         if (userRepository.findByUsername(username).isPresent()) {
             return "redirect:/register?error";
@@ -41,16 +51,34 @@ public class AuthController {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setRole("ROLE_USER");
+        user.setDescription("");
 
-        // ✅ FIX: centralized fallback (important for consistency)
-        user.setProfilePicture(
-                (profilePicture == null || profilePicture.isBlank())
-                        ? "https://oyster.ignimgs.com/mediawiki/apis.ign.com/pokemon-black-and-white/f/f6/Pokemans_558.gif?width=396"
-                        : profilePicture
-        );
+        // =========================
+        // IMAGE UPLOAD LOGIC
+        // =========================
+        String profilePath;
 
-        // ✅ IMPORTANT ADDITION (missing in your system design)
-        user.setDescription(""); // ensures profile never null later
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                File dir = new File(UPLOAD_DIR);
+                if (!dir.exists()) dir.mkdirs();
+
+                String filename = UUID.randomUUID()
+                        + "_" + profileImage.getOriginalFilename();
+
+                Path path = Paths.get(UPLOAD_DIR, filename);
+                Files.write(path, profileImage.getBytes());
+
+                profilePath = "/uploads/" + filename;
+
+            } catch (IOException e) {
+                profilePath = "/images/default-avatar.png";
+            }
+        } else {
+            profilePath = "/images/default-avatar.png";
+        }
+
+        user.setProfileImagePath(profilePath);
 
         userRepository.save(user);
 

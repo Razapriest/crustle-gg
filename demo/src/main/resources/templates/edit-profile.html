@@ -10,25 +10,51 @@
 
 <h1>Edit Profile</h1>
 
-<form th:action="@{'/user/edit/' + ${user.username}}" method="post">
+<form th:action="@{'/user/edit/' + ${user.username}}"
+      method="post"
+      enctype="multipart/form-data">
 
-    <!-- PROFILE PICTURE -->
-    <label>Profile Picture URL</label><br>
-    <input type="text"
-           name="profilePicture"
-           th:value="${user.profilePicture}"
-           placeholder="Enter image URL or leave empty for default"
-           style="width:300px;">
+    <!-- PROFILE PICTURE UPLOAD -->
+    <label>Profile Picture</label><br>
+
+    <input type="file"
+           name="profileImage"
+           accept="image/*">
     <br><br>
+
+    <!-- CURRENT PROFILE IMAGE -->
+    <div th:if="${user.profileImagePath != null}">
+
+        <p>Current:</p>
+
+        <img th:src="${'/uploads/' + user.profileImagePath}"
+             width="120"
+             height="120"
+             style="object-fit: cover; border-radius: 50%; border:1px solid #ccc;">
+    </div>
+
+    <!-- DEFAULT IMAGE IF NULL -->
+    <div th:if="${user.profileImagePath == null}">
+        <p>Current:</p>
+
+        <img src="/uploads/default.png"
+             width="120"
+             height="120"
+             style="object-fit: cover; border-radius: 50%; border:1px solid #ccc;">
+    </div>
+
+    <br>
 
     <!-- DESCRIPTION -->
     <label>Description</label><br>
+
     <textarea name="description"
               rows="5"
               cols="40"
               placeholder="Tell something about yourself..."
               th:text="${user.description}">
     </textarea>
+
     <br><br>
 
     <button type="submit">Save Changes</button>
@@ -37,7 +63,7 @@
 
 <br>
 
-<!-- BACK LINK -->
+<!-- BACK -->
 <a th:href="@{'/user/' + ${user.username}}">← Back to Profile</a>
 
 </body>

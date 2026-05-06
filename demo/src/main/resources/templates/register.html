@@ -9,18 +9,39 @@
 
 <h2>Register</h2>
 
-<form action="/register" method="post">
+<form action="/register"
+      method="post"
+      enctype="multipart/form-data">
+
+    <!-- USERNAME -->
     <div>
-        <input type="text" name="username" placeholder="Username" />
+        <input type="text"
+               name="username"
+               placeholder="Username"
+               required />
     </div>
 
+    <br>
+
+    <!-- PASSWORD -->
     <div>
-        <input type="password" name="password" placeholder="Password" />
+        <input type="password"
+               name="password"
+               placeholder="Password"
+               required />
     </div>
 
+    <br>
+
+    <!-- PROFILE IMAGE UPLOAD -->
     <div>
-        <input type="text" name="profilePicture" placeholder="Profile Picture URL" />
+        <label>Profile Picture</label><br>
+        <input type="file"
+               name="profileImage"
+               accept="image/*" />
     </div>
+
+    <br>
 
     <button type="submit">Register</button>
 </form>

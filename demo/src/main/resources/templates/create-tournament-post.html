@@ -45,15 +45,17 @@
         }
     </style>
 </head>
+
 <body>
 
 <div th:replace="fragments/navbar :: navbar"></div>
 
 <h2>Create Tournament Post</h2>
 
-<form th:action="@{/post/create-tournament-post}" method="post">
+<form th:action="@{/post/create-tournament-post}"
+      method="post"
+      enctype="multipart/form-data">
 
-    <!-- CSRF -->
     <input type="hidden"
            th:if="${_csrf != null}"
            th:name="${_csrf.parameterName}"
@@ -63,8 +65,12 @@
     <input type="text" name="title" placeholder="Tournament Name" required />
     <br><br>
 
-    <!-- IMAGE -->
-    <input type="text" name="imageUrl" placeholder="Image URL (optional)" />
+    <!-- ========================= -->
+    <!-- IMAGE UPLOAD (NEW) -->
+    <!-- ========================= -->
+    <input type="file"
+           name="image"
+           accept="image/*" />
     <br><br>
 
     <!-- DESCRIPTION -->
@@ -83,6 +89,7 @@
             <th>Name</th>
             <th>Archetype</th>
             <th>Deck Link</th>
+            <th>Score</th>
             <th>Actions</th>
         </tr>
         </thead>
@@ -100,32 +107,24 @@
 
 </form>
 
-<!-- ===================== -->
-<!-- ARCHETYPE DATA SOURCE -->
-<!-- ===================== -->
+<!-- ARCHETYPE DATA -->
 <div id="archetypeData" style="display:none;">
-
     <div th:each="a : ${archetypes}"
          class="archetype-data-item"
          th:data-value="${a.name()}"
          th:data-name="${a.displayName}"
          th:data-icon="${a.iconPath}">
     </div>
-
 </div>
 
-<!-- ===================== -->
 <!-- ROW TEMPLATE -->
-<!-- ===================== -->
 <template id="rowTemplate">
     <tr>
 
-        <!-- PLAYER -->
         <td>
             <input type="text" name="playerName" required />
         </td>
 
-        <!-- ARCHETYPE -->
         <td>
             <div class="archetype-picker">
 
@@ -145,14 +144,19 @@
             </div>
         </td>
 
-        <!-- DECK LINK -->
         <td>
             <input type="text"
                    name="deckLink"
                    placeholder="/post/ID or URL" />
         </td>
 
-        <!-- ACTIONS -->
+        <td>
+            <input type="text"
+                   name="playerScore"
+                   placeholder="e.g. 3-1-0"
+                   required />
+        </td>
+
         <td>
             <button type="button" onclick="moveUp(this)">⬆</button>
             <button type="button" onclick="moveDown(this)">⬇</button>
@@ -199,7 +203,6 @@
 
         search.addEventListener("input", function () {
             const value = this.value.toLowerCase();
-
             dropdown.style.display = "block";
 
             options.forEach(option => {
@@ -238,22 +241,15 @@
     function moveUp(btn) {
         const row = btn.closest("tr");
         const prev = row.previousElementSibling;
-
-        if (prev) {
-            row.parentNode.insertBefore(row, prev);
-        }
+        if (prev) row.parentNode.insertBefore(row, prev);
     }
 
     function moveDown(btn) {
         const row = btn.closest("tr");
         const next = row.nextElementSibling;
-
-        if (next) {
-            row.parentNode.insertBefore(next, row);
-        }
+        if (next) row.parentNode.insertBefore(next, row);
     }
 
-    // Initial row
     addRow();
 </script>
 

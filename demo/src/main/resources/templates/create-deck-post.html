@@ -43,18 +43,24 @@
             height: 24px;
             object-fit: contain;
         }
+
+        .upload-box {
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <div th:replace="fragments/navbar :: navbar"></div>
 
 <h2>Create New Deck Post</h2>
 
-<form th:action="@{/post/create-deck-post}" method="post">
+<!-- IMPORTANT: multipart for file upload -->
+<form th:action="@{/post/create-deck-post}"
+      method="post"
+      enctype="multipart/form-data">
 
-    <!-- CSRF TOKEN -->
+    <!-- CSRF -->
     <input type="hidden"
            th:if="${_csrf != null}"
            th:name="${_csrf.parameterName}"
@@ -67,11 +73,15 @@
            required />
     <br><br>
 
-    <!-- IMAGE -->
-    <input type="text"
-           name="imageUrl"
-           placeholder="Image URL (optional)" />
-    <br><br>
+    <!-- IMAGE UPLOAD (NEW) -->
+    <div class="upload-box">
+        <label>Deck Image:</label><br>
+        <input type="file"
+               name="imageFile"
+               accept="image/*" />
+    </div>
+
+    <br>
 
     <!-- DECK LIST -->
     <textarea name="deckList"
@@ -87,7 +97,6 @@
 
     <div class="archetype-picker">
 
-        <!-- Search Box -->
         <input type="text"
                id="archetypeSearch"
                class="archetype-search"
@@ -95,13 +104,11 @@
                autocomplete="off"
                required />
 
-        <!-- Hidden Selected Value -->
         <input type="hidden"
                name="archetype"
                id="selectedArchetype"
                required />
 
-        <!-- Dropdown -->
         <div id="archetypeDropdown" class="archetype-dropdown">
 
             <div th:each="a : ${archetypes}"
@@ -117,7 +124,6 @@
             </div>
 
         </div>
-
     </div>
 
     <br><br>
@@ -144,27 +150,20 @@
     const hiddenInput = document.getElementById("selectedArchetype");
     const options = document.querySelectorAll(".archetype-option");
 
-    // Show dropdown when focused
     searchInput.addEventListener("focus", () => {
         dropdown.style.display = "block";
     });
 
-    // Filter options
     searchInput.addEventListener("input", function () {
         const value = this.value.toLowerCase();
-
         dropdown.style.display = "block";
 
         options.forEach(option => {
             const name = option.dataset.name.toLowerCase();
-
-            option.style.display = name.includes(value)
-                ? "flex"
-                : "none";
+            option.style.display = name.includes(value) ? "flex" : "none";
         });
     });
 
-    // Select option
     options.forEach(option => {
         option.addEventListener("click", function () {
             searchInput.value = this.dataset.name;
@@ -173,7 +172,6 @@
         });
     });
 
-    // Close dropdown when clicking outside
     document.addEventListener("click", function (e) {
         if (!document.querySelector(".archetype-picker").contains(e.target)) {
             dropdown.style.display = "none";

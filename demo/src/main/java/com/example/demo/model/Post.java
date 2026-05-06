@@ -37,7 +37,10 @@ public class Post {
     @Column(length = 10000)
     private String description;
 
-    private String imageUrl;
+    // =========================
+    // IMAGE (LOCAL FILE PATH)
+    // =========================
+    private String imagePath;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
@@ -81,7 +84,7 @@ public class Post {
     }
 
     // =========================
-    // HELPER METHODS
+    // HELPERS
     // =========================
 
     public void addEntry(TournamentEntry entry) {
@@ -94,11 +97,6 @@ public class Post {
         entry.setTournament(null);
     }
 
-    /**
-     * IMPORTANT:
-     * Never replace Hibernate-managed collection directly.
-     * Clear + re-add avoids orphanRemoval crash.
-     */
     public void setEntries(List<TournamentEntry> newEntries) {
         this.entries.clear();
 
@@ -189,12 +187,12 @@ public class Post {
         this.description = description;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getImagePath() {
+        return imagePath;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     public User getAuthor() {

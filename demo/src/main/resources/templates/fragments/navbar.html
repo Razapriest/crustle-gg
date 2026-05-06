@@ -21,7 +21,10 @@
             <a th:href="@{'/user/' + ${loggedUser.username}}"
                style="display:flex; align-items:center; gap:8px; text-decoration:none; color:black;">
 
-                <img th:src="${loggedUser.profilePicture}"
+                <!-- PROFILE IMAGE (NEW UPLOAD SYSTEM) -->
+                <img th:src="${loggedUser.profileImagePath != null
+                              ? '/uploads/' + loggedUser.profileImagePath
+                              : '/uploads/default.png'}"
                      width="35"
                      height="35"
                      style="border-radius:50%; object-fit:cover; border:1px solid #ccc;"/>

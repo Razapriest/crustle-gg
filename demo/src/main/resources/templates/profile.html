@@ -10,6 +10,14 @@
             margin-bottom: 15px;
             border-radius: 8px;
         }
+
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 <body>
@@ -18,7 +26,13 @@
 
 <h1 th:text="${profileUser.username}"></h1>
 
-<img th:src="${profileUser.profilePicture}" width="150"/>
+<!-- ========================= -->
+<!-- PROFILE IMAGE (UPLOAD-BASED) -->
+<!-- ========================= -->
+<img class="profile-pic"
+     th:src="${profileUser.profileImagePath != null
+              ? '/uploads/' + profileUser.profileImagePath
+              : '/uploads/default.png'}" />
 
 <p>Score: <span th:text="${score}"></span></p>
 <p th:text="${profileUser.description}"></p>
@@ -46,15 +60,24 @@
             <span th:text="${post.title}"></span>
 
             <!-- DECK ARCHETYPE -->
-            <span th:if="${post.type.name() == 'DECK' and post.archetype != null}"
-                  th:text="' (' + ${post.archetype} + ')'">
+            <span th:if="${post.type.name() == 'DECK' and post.archetype != null}">
+                (<span th:text="${post.archetype.displayName}"></span>)
             </span>
         </h3>
 
         <p th:text="${#temporals.format(post.createdAt, 'dd MMM yyyy HH:mm')}"></p>
 
-        <img th:src="${post.imageUrl != null ? post.imageUrl : 'https://via.placeholder.com/150'}"
-             width="200"/>
+        <!-- ========================= -->
+        <!-- POST IMAGE (UPLOAD-BASED) -->
+        <!-- ========================= -->
+        <img style="width:200px; object-fit:cover;"
+             th:if="${post.imagePath != null}"
+             th:src="@{'/uploads/' + ${post.imagePath}}" />
+
+        <!-- fallback -->
+        <img style="width:200px; object-fit:cover;"
+             th:if="${post.imagePath == null}"
+             src="/uploads/default.png" />
 
         <!-- ========================= -->
         <!-- TOURNAMENT PREVIEW -->

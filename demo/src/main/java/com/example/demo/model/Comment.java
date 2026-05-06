@@ -12,14 +12,19 @@ public class Comment {
 
     private String content;
 
-    // ✅ FIXED: use real relation instead of String
+    // =========================
+    // RELATIONS
+    // =========================
+
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
     private User author;
 
-    private LocalDateTime createdAt;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id")
     private Post post;
+
+    private LocalDateTime createdAt;
 
     // =========================
     // GETTERS & SETTERS
@@ -65,12 +70,16 @@ public class Comment {
         this.createdAt = createdAt;
     }
 
-    // 🔥 Helper method (VERY useful for Thymeleaf)
+    // =========================
+    // HELPERS (SAFE FOR THYMELEAF)
+    // =========================
+
     public String getAuthorUsername() {
         return author != null ? author.getUsername() : "unknown";
     }
 
-    public String getAuthorProfilePicture() {
-        return author != null ? author.getProfilePicture() : "https://via.placeholder.com/40";
+    public String getAuthorProfileImagePath() {
+        return author != null ? author.getProfileImagePath()
+                : "/images/default-profile.png";
     }
 }

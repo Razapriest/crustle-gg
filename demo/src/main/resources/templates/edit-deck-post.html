@@ -43,6 +43,13 @@
             height: 24px;
             object-fit: contain;
         }
+
+        .preview-img {
+            margin-top: 10px;
+            max-width: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -51,7 +58,9 @@
 
 <h2>Edit Deck Post</h2>
 
-<form th:action="@{'/post/edit/' + ${post.id}}" method="post">
+<form th:action="@{'/post/edit/' + ${post.id}}"
+      method="post"
+      enctype="multipart/form-data">
 
     <!-- TITLE -->
     <label>Title</label><br>
@@ -61,11 +70,29 @@
            required />
     <br><br>
 
-    <!-- IMAGE -->
-    <label>Image URL</label><br>
-    <input type="text"
-           name="imageUrl"
-           th:value="${post.imageUrl}" />
+    <!-- IMAGE UPLOAD -->
+    <label>Deck Image</label><br>
+
+    <input type="file"
+           name="imageFile"
+           accept="image/*" />
+
+    <br>
+
+    <!-- CURRENT IMAGE -->
+    <div th:if="${post.imagePath != null}">
+        <p>Current image:</p>
+        <img th:src="@{'/uploads/' + ${post.imagePath}}"
+             class="preview-img" />
+    </div>
+
+    <!-- fallback -->
+    <div th:if="${post.imagePath == null}">
+        <p>Current image:</p>
+        <img src="/uploads/default.png"
+             class="preview-img" />
+    </div>
+
     <br><br>
 
     <!-- DECK LIST -->
@@ -84,7 +111,6 @@
 
     <div class="archetype-picker">
 
-        <!-- Visible Search -->
         <input type="text"
                id="archetypeSearch"
                class="archetype-search"
@@ -93,14 +119,12 @@
                th:value="${post.archetype != null ? post.archetype.displayName : ''}"
                required />
 
-        <!-- Hidden Actual Enum -->
         <input type="hidden"
                name="archetype"
                id="selectedArchetype"
                th:value="${post.archetype != null ? post.archetype.name() : ''}"
                required />
 
-        <!-- Dropdown -->
         <div id="archetypeDropdown" class="archetype-dropdown">
 
             <div th:each="a : ${archetypes}"
@@ -108,9 +132,7 @@
                  th:data-value="${a.name()}"
                  th:data-name="${a.displayName}">
 
-                <img th:src="${a.iconPath}"
-                     th:alt="${a.displayName}" />
-
+                <img th:src="${a.iconPath}" />
                 <span th:text="${a.displayName}"></span>
 
             </div>
@@ -145,27 +167,21 @@
     const hiddenInput = document.getElementById("selectedArchetype");
     const options = document.querySelectorAll(".archetype-option");
 
-    // Show dropdown
     searchInput.addEventListener("focus", () => {
         dropdown.style.display = "block";
     });
 
-    // Filter
     searchInput.addEventListener("input", function () {
         const value = this.value.toLowerCase();
-
         dropdown.style.display = "block";
 
         options.forEach(option => {
-            const name = option.dataset.name.toLowerCase();
-
-            option.style.display = name.includes(value)
+            option.style.display = option.dataset.name.toLowerCase().includes(value)
                 ? "flex"
                 : "none";
         });
     });
 
-    // Select
     options.forEach(option => {
         option.addEventListener("click", function () {
             searchInput.value = this.dataset.name;
@@ -174,7 +190,6 @@
         });
     });
 
-    // Close on outside click
     document.addEventListener("click", function (e) {
         if (!document.querySelector(".archetype-picker").contains(e.target)) {
             dropdown.style.display = "none";

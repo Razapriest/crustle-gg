@@ -39,23 +39,41 @@
         th, td {
             padding: 8px;
         }
+
+        .profile-pic {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid #ccc;
+        }
+
+        .post-image {
+            width: 300px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
     </style>
 </head>
+
 <body>
 
-<!-- NAVBAR -->
 <div th:replace="fragments/navbar :: navbar"></div>
 
 <h1 th:text="${post.title}"></h1>
 
+<!-- ========================= -->
 <!-- AUTHOR INFO -->
+<!-- ========================= -->
 <div style="display:flex; align-items:center; gap:10px;">
 
     <a th:href="@{'/user/' + ${post.author.username}}">
-        <img th:src="${post.author.profilePicture}"
-             width="50"
-             height="50"
-             style="border-radius:50%; object-fit:cover; border:1px solid #ccc;">
+
+        <img class="profile-pic"
+             th:src="${post.author.profileImagePath != null
+                      ? '/uploads/' + post.author.profileImagePath
+                      : '/uploads/default.png'}" />
+
     </a>
 
     <div>
@@ -75,8 +93,10 @@
 <!-- ========================= -->
 <!-- POST IMAGE -->
 <!-- ========================= -->
-<img th:src="${post.imageUrl != null and !#strings.isEmpty(post.imageUrl) ? post.imageUrl : 'https://via.placeholder.com/300'}"
-     width="300"/>
+<img class="post-image"
+     th:src="${post.imagePath != null
+              ? '/uploads/' + post.imagePath
+              : '/uploads/default.png'}" />
 
 <br><br>
 
@@ -85,7 +105,6 @@
 <!-- ========================= -->
 <div th:if="${post.type.name() == 'DECK'}">
 
-    <!-- ARCHETYPE -->
     <div class="deck-archetype-box" th:if="${post.archetype != null}">
         <img th:src="${post.archetype.iconPath}"
              th:alt="${post.archetype.displayName}">
@@ -113,6 +132,7 @@
             <th>Placement</th>
             <th>Player</th>
             <th>Archetype</th>
+            <th>Score</th>
             <th>Deck</th>
         </tr>
         </thead>
@@ -120,24 +140,20 @@
         <tbody>
         <tr th:each="e : ${post.entries}">
 
-            <!-- PLACEMENT -->
             <td th:text="${e.placement}"></td>
-
-            <!-- PLAYER -->
             <td th:text="${e.playerName}"></td>
 
-            <!-- ARCHETYPE -->
             <td>
                 <div class="archetype-badge" th:if="${e.archetype != null}">
                     <img th:src="${e.archetype.iconPath}"
                          th:alt="${e.archetype.displayName}">
                     <span th:text="${e.archetype.displayName}"></span>
                 </div>
-
                 <span th:if="${e.archetype == null}">-</span>
             </td>
 
-            <!-- DECK -->
+            <td th:text="${e.score != null ? e.score : '-'}"></td>
+
             <td>
                 <a th:if="${e.deckLink != null and !#strings.isEmpty(e.deckLink)}"
                    th:href="${e.deckLink}"
@@ -145,9 +161,7 @@
                     Open Deck
                 </a>
 
-                <span th:if="${e.deckLink == null or #strings.isEmpty(e.deckLink)}">
-                    -
-                </span>
+                <span th:if="${e.deckLink == null or #strings.isEmpty(e.deckLink)}">-</span>
             </td>
 
         </tr>
@@ -204,20 +218,19 @@
 <!-- ========================= -->
 <div th:if="${post.author.username == currentUser}">
 
-    <!-- EDIT -->
-    <a th:href="@{'/post/edit/' + ${post.id}}"
-       style="display:inline-block; margin-right:10px;">
+    <a th:href="@{'/post/edit/' + ${post.id}}">
         <button type="button">Edit</button>
     </a>
 
-    <!-- DELETE -->
     <form th:action="@{'/post/delete/' + ${post.id}}"
           method="post"
           style="display:inline;">
+
         <button type="submit"
                 onclick="return confirm('Are you sure you want to delete this post?')">
             Delete
         </button>
+
     </form>
 
 </div>
@@ -238,12 +251,13 @@
 
     <div style="display:flex; gap:10px;">
 
-        <!-- USER -->
         <a th:href="@{'/user/' + ${c.author.username}}">
-            <img th:src="${c.author.profilePicture}"
-                 width="40"
-                 height="40"
-                 style="border-radius:50%; object-fit:cover; border:1px solid #ccc;">
+
+            <img class="profile-pic"
+                 th:src="${c.author.profileImagePath != null
+                          ? '/uploads/' + c.author.profileImagePath
+                          : '/uploads/default.png'}" />
+
         </a>
 
         <div>
@@ -259,7 +273,6 @@
 
             <p th:text="${c.content}"></p>
 
-            <!-- DELETE COMMENT -->
             <form th:if="${c.author.username == currentUser}"
                   th:action="@{'/comment/delete/' + ${c.id}}"
                   method="post">

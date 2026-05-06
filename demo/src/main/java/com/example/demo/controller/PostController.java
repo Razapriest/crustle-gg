@@ -1,19 +1,17 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.*;
-import com.example.demo.repository.CommentRepository;
-import com.example.demo.repository.PostRepository;
-import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.VoteRepository;
+import com.example.demo.repository.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Controller
 public class PostController {
@@ -22,6 +20,9 @@ public class PostController {
     private final CommentRepository commentRepository;
     private final VoteRepository voteRepository;
     private final UserRepository userRepository;
+
+    // upload folder (OUTSIDE resources - correct way)
+    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
 
     public PostController(PostRepository postRepository,
                           CommentRepository commentRepository,
@@ -82,15 +83,33 @@ public class PostController {
     }
 
     // =========================
+    // SAVE IMAGE
+    // =========================
+    private String saveImage(MultipartFile file) throws IOException {
+
+        if (file == null || file.isEmpty()) return null;
+
+        File dir = new File(UPLOAD_DIR);
+        if (!dir.exists()) dir.mkdirs();
+
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        File destination = new File(UPLOAD_DIR + fileName);
+
+        file.transferTo(destination);
+
+        return fileName;
+    }
+
+    // =========================
     // CREATE DECK POST
     // =========================
     @PostMapping("/post/create-deck-post")
     public String createDeckPost(@RequestParam String title,
                                  @RequestParam String deckList,
                                  @RequestParam(required = false) String description,
-                                 @RequestParam(required = false) String imageUrl,
+                                 @RequestParam(required = false) MultipartFile imageFile,
                                  @RequestParam Archetype archetype,
-                                 Authentication auth) {
+                                 Authentication auth) throws IOException {
 
         if (auth == null) return "redirect:/login";
 
@@ -101,7 +120,7 @@ public class PostController {
         post.setTitle(title);
         post.setDeckList(deckList);
         post.setDescription(description);
-        post.setImageUrl(imageUrl);
+        post.setImagePath(saveImage(imageFile));
         post.setAuthor(user);
         post.setArchetype(archetype);
         post.setType(PostType.DECK);
@@ -117,13 +136,14 @@ public class PostController {
     @PostMapping("/post/create-tournament-post")
     public String createTournamentPost(
             @RequestParam String title,
-            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) MultipartFile imageFile,
             @RequestParam("playerName") List<String> playerNames,
             @RequestParam("archetype") List<Archetype> archetypes,
             @RequestParam("deckLink") List<String> deckLinks,
+            @RequestParam("playerScore") List<String> playerScores,
             @RequestParam(required = false) String description,
             Authentication auth
-    ) {
+    ) throws IOException {
 
         if (auth == null) return "redirect:/login";
 
@@ -132,7 +152,7 @@ public class PostController {
 
         Post tournament = new Post();
         tournament.setTitle(title);
-        tournament.setImageUrl(imageUrl);
+        tournament.setImagePath(saveImage(imageFile));
         tournament.setDescription(description);
         tournament.setAuthor(user);
         tournament.setType(PostType.TOURNAMENT);
@@ -141,14 +161,13 @@ public class PostController {
 
         for (int i = 0; i < playerNames.size(); i++) {
 
-            if (playerNames.get(i) == null || playerNames.get(i).isBlank()) {
-                continue;
-            }
+            if (playerNames.get(i) == null || playerNames.get(i).isBlank()) continue;
 
             TournamentEntry entry = new TournamentEntry();
             entry.setPlayerName(playerNames.get(i));
             entry.setArchetype(archetypes.get(i));
             entry.setDeckLink(deckLinks.get(i));
+            entry.setScore(playerScores.get(i));
             entry.setPlacement(placement++);
 
             tournament.addEntry(entry);
@@ -160,47 +179,42 @@ public class PostController {
     }
 
     // =========================
-    // EDIT PAGE
+    // EDIT POST
     // =========================
     @GetMapping("/post/edit/{id}")
-    public String editPostPage(@PathVariable Long id,
-                               Model model,
-                               Authentication auth) {
+    public String editPost(@PathVariable Long id,
+                           Authentication auth,
+                           Model model) {
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (auth == null || !post.getAuthor().getUsername().equals(auth.getName())) {
+        if (auth == null || !auth.getName().equals(post.getAuthor().getUsername())) {
             return "redirect:/?error=unauthorized";
         }
 
         model.addAttribute("post", post);
-        model.addAttribute("archetypes", Archetype.values());
 
-        return post.getType() == PostType.DECK
-                ? "edit-deck-post"
-                : "edit-tournament-post";
+        if (post.getType().name().equals("DECK")) {
+            return "edit-deck-post";
+        }
+
+        if (post.getType().name().equals("TOURNAMENT")) {
+            return "edit-tournament-post";
+        }
+
+        return "redirect:/";
     }
 
-    // =========================
-    // EDIT POST
-    // =========================
     @PostMapping("/post/edit/{id}")
-    public String editPost(
-            @PathVariable Long id,
-            @RequestParam String title,
-            @RequestParam(required = false) String deckList,
-            @RequestParam(required = false) Archetype postArchetype,
-            @RequestParam(required = false) String extraInfo,
-            @RequestParam(required = false) String imageUrl,
-            @RequestParam(required = false) String description,
-
-            @RequestParam(required = false) List<String> playerName,
-            @RequestParam(required = false) List<Archetype> archetype,
-            @RequestParam(required = false) List<String> deckLink,
-
-            Authentication auth
-    ) {
+    public String editPost(@PathVariable Long id,
+                           @RequestParam String title,
+                           @RequestParam(required = false) String deckList,
+                           @RequestParam(required = false) Archetype postArchetype,
+                           @RequestParam(required = false) String extraInfo,
+                           @RequestParam(required = false) MultipartFile imageFile,
+                           @RequestParam(required = false) String description,
+                           Authentication auth) throws IOException {
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
@@ -210,12 +224,13 @@ public class PostController {
         }
 
         post.setTitle(title);
-        post.setImageUrl(imageUrl);
         post.setDescription(description);
 
-        // =========================
-        // DECK EDIT
-        // =========================
+        String newImage = saveImage(imageFile);
+        if (newImage != null) {
+            post.setImagePath(newImage);
+        }
+
         if (post.getType() == PostType.DECK) {
             post.setDeckList(deckList);
             post.setExtraInfo(extraInfo);
@@ -223,37 +238,6 @@ public class PostController {
             if (postArchetype != null) {
                 post.setArchetype(postArchetype);
             }
-        }
-
-        // =========================
-        // TOURNAMENT EDIT
-        // =========================
-        if (post.getType() == PostType.TOURNAMENT) {
-
-            List<TournamentEntry> updatedEntries = new ArrayList<>();
-
-            if (playerName != null) {
-
-                int placement = 1;
-
-                for (int i = 0; i < playerName.size(); i++) {
-
-                    if (playerName.get(i) == null || playerName.get(i).isBlank()) {
-                        continue;
-                    }
-
-                    TournamentEntry entry = new TournamentEntry();
-                    entry.setPlayerName(playerName.get(i));
-                    entry.setArchetype(archetype.get(i));
-                    entry.setDeckLink(deckLink.get(i));
-                    entry.setPlacement(placement++);
-
-                    updatedEntries.add(entry);
-                }
-            }
-
-            // SAFE orphanRemoval-compatible update
-            post.setEntries(updatedEntries);
         }
 
         postRepository.save(post);
@@ -276,10 +260,8 @@ public class PostController {
         }
 
         postRepository.delete(post);
-
         return "redirect:/";
     }
-
     // =========================
     // LIKE
     // =========================

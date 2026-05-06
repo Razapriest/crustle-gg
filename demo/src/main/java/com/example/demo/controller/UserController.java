@@ -8,14 +8,21 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Controller
 public class UserController {
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+
+    private static final String UPLOAD_DIR =
+            System.getProperty("user.dir") + "/uploads/";
 
     public UserController(UserRepository userRepository,
                           PostRepository postRepository) {
@@ -34,7 +41,6 @@ public class UserController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // FIX: use entity relation instead of string matching
         List<Post> posts = postRepository.findByAuthorOrderByCreatedAtDesc(user);
 
         int score = posts.stream()
@@ -72,13 +78,31 @@ public class UserController {
     }
 
     // =========================
+    // SAVE IMAGE
+    // =========================
+    private String saveImage(MultipartFile file) throws IOException {
+
+        if (file == null || file.isEmpty()) return null;
+
+        File dir = new File(UPLOAD_DIR);
+        if (!dir.exists()) dir.mkdirs();
+
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        File destination = new File(UPLOAD_DIR + fileName);
+
+        file.transferTo(destination);
+
+        return fileName;
+    }
+
+    // =========================
     // UPDATE PROFILE
     // =========================
     @PostMapping("/user/edit/{username}")
     public String editProfile(@PathVariable String username,
                               @RequestParam String description,
-                              @RequestParam String profilePicture,
-                              Authentication auth) {
+                              @RequestParam(required = false) MultipartFile profileImage,
+                              Authentication auth) throws IOException {
 
         if (auth == null || !auth.getName().equals(username)) {
             return "redirect:/?error=unauthorized";
@@ -87,13 +111,13 @@ public class UserController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // fallback image
-        if (profilePicture == null || profilePicture.isBlank()) {
-            profilePicture = "https://via.placeholder.com/150";
+        String uploadedImage = saveImage(profileImage);
+
+        if (uploadedImage != null) {
+            user.setProfileImagePath(uploadedImage);
         }
 
         user.setDescription(description);
-        user.setProfilePicture(profilePicture);
 
         userRepository.save(user);
 

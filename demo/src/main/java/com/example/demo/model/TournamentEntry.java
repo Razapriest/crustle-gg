@@ -19,6 +19,8 @@ public class TournamentEntry {
 
     private int placement;
 
+    private String score;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id")
     private Post tournament;
@@ -68,4 +70,10 @@ public class TournamentEntry {
     public void setTournament(Post tournament) {
         this.tournament = tournament;
     }
+
+    public String getScore() { return score; }
+
+    public void setScore(String score) { this.score = score; }
+
+
 }
