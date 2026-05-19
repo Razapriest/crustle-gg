@@ -1,50 +1,35 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<body>
+<div th:fragment="navbar" xmlns:sec="http://www.w3.org/1999/xhtml">
+    <nav class="navbar">
 
-<div th:fragment="navbar">
-    <nav style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:#eee;">
-
-        <!-- LEFT -->
-        <div>
+        <div class="navbar-left">
             <a href="/">Home</a>
             <a href="/post/create-deck-post">Create Deck Post</a>
             <a href="/post/create-tournament-post">Create Tournament Post</a>
         </div>
 
-        <!-- RIGHT -->
-        <div sec:authorize="isAuthenticated()"
-             th:if="${loggedUser != null}"
-             style="display:flex; align-items:center; gap:12px;">
+        <div class="navbar-right"
+             sec:authorize="isAuthenticated()"
+             th:if="${loggedUser != null}">
 
             <a th:href="@{'/user/' + ${loggedUser.username}}"
-               style="display:flex; align-items:center; gap:8px; text-decoration:none; color:black;">
+               class="navbar-user">
 
-                <!-- PROFILE IMAGE (NEW UPLOAD SYSTEM) -->
                 <img th:src="${loggedUser.profileImagePath != null
                               ? '/uploads/' + loggedUser.profileImagePath
-                              : '/uploads/default.png'}"
-                     width="35"
-                     height="35"
-                     style="border-radius:50%; object-fit:cover; border:1px solid #ccc;"/>
+                              : '/uploads/default.png'}" />
 
                 <span th:text="${loggedUser.username}"></span>
             </a>
 
-            <form th:action="@{/logout}" method="post" style="margin:0;">
-                <button type="submit">Logout</button>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="secondary-btn">Logout</button>
             </form>
-
         </div>
 
         <div sec:authorize="isAnonymous()">
             <a href="/login">Login</a>
-            <a href="/register" style="margin-left:10px;">Register</a>
+            <a href="/register">Register</a>
         </div>
 
     </nav>
 </div>
-
-</body>
-</html>

@@ -2,69 +2,62 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Edit Profile</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
 </head>
+
 <body>
 
 <!-- NAVBAR -->
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<h1>Edit Profile</h1>
+<div class="profile-container">
 
-<form th:action="@{'/user/edit/' + ${user.username}}"
-      method="post"
-      enctype="multipart/form-data">
+    <h1>Edit Profile</h1>
 
-    <!-- PROFILE PICTURE UPLOAD -->
-    <label>Profile Picture</label><br>
+    <form th:action="@{'/user/edit/' + ${user.username}}"
+          method="post"
+          enctype="multipart/form-data">
 
-    <input type="file"
-           name="profileImage"
-           accept="image/*">
-    <br><br>
+        <!-- PROFILE IMAGE -->
+        <div class="section">
+            <label>Profile Picture</label><br>
 
-    <!-- CURRENT PROFILE IMAGE -->
-    <div th:if="${user.profileImagePath != null}">
+            <input type="file"
+                   name="profileImage"
+                   accept="image/*">
 
-        <p>Current:</p>
+            <br><br>
 
-        <img th:src="${'/uploads/' + user.profileImagePath}"
-             width="120"
-             height="120"
-             style="object-fit: cover; border-radius: 50%; border:1px solid #ccc;">
-    </div>
+            <p>Current:</p>
 
-    <!-- DEFAULT IMAGE IF NULL -->
-    <div th:if="${user.profileImagePath == null}">
-        <p>Current:</p>
+            <img th:src="${user.profileImagePath != null
+                          ? '/uploads/' + user.profileImagePath
+                          : '/uploads/default.png'}"
+                 class="profile-img">
+        </div>
 
-        <img src="/uploads/default.png"
-             width="120"
-             height="120"
-             style="object-fit: cover; border-radius: 50%; border:1px solid #ccc;">
-    </div>
+        <!-- DESCRIPTION -->
+        <div class="section">
+            <label>Description</label><br>
+
+            <textarea name="description"
+                      rows="5"
+                      placeholder="Tell something about yourself..."
+                      th:text="${user.description}">
+            </textarea>
+        </div>
+
+        <!-- SAVE -->
+        <button type="submit">Save Changes</button>
+
+    </form>
 
     <br>
 
-    <!-- DESCRIPTION -->
-    <label>Description</label><br>
+    <a th:href="@{'/user/' + ${user.username}}">← Back to Profile</a>
 
-    <textarea name="description"
-              rows="5"
-              cols="40"
-              placeholder="Tell something about yourself..."
-              th:text="${user.description}">
-    </textarea>
-
-    <br><br>
-
-    <button type="submit">Save Changes</button>
-
-</form>
-
-<br>
-
-<!-- BACK -->
-<a th:href="@{'/user/' + ${user.username}}">← Back to Profile</a>
+</div>
 
 </body>
 </html>

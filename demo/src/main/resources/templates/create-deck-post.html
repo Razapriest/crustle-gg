@@ -2,60 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Create Deck Post</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 
-    <style>
-        .archetype-picker {
-            position: relative;
-            width: 320px;
-        }
-
-        .archetype-search {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-
-        .archetype-dropdown {
-            border: 1px solid #ccc;
-            max-height: 220px;
-            overflow-y: auto;
-            display: none;
-            position: absolute;
-            width: 100%;
-            background: white;
-            z-index: 1000;
-        }
-
-        .archetype-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px;
-            cursor: pointer;
-        }
-
-        .archetype-option:hover {
-            background-color: #f0f0f0;
-        }
-
-        .archetype-option img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-        }
-
-        .upload-box {
-            margin: 10px 0;
-        }
-    </style>
 </head>
+
 <body>
 
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <h2>Create New Deck Post</h2>
 
-<!-- IMPORTANT: multipart for file upload -->
 <form th:action="@{/post/create-deck-post}"
       method="post"
       enctype="multipart/form-data">
@@ -71,9 +27,10 @@
            name="title"
            placeholder="Deck Name"
            required />
+
     <br><br>
 
-    <!-- IMAGE UPLOAD (NEW) -->
+    <!-- IMAGE -->
     <div class="upload-box">
         <label>Deck Image:</label><br>
         <input type="file"
@@ -116,9 +73,7 @@
                  th:data-value="${a.name()}"
                  th:data-name="${a.displayName}">
 
-                <img th:src="${a.iconPath}"
-                     th:alt="${a.displayName}" />
-
+                <img th:src="${a.iconPath}" th:alt="${a.displayName}" />
                 <span th:text="${a.displayName}"></span>
 
             </div>
@@ -145,10 +100,11 @@
 <a th:href="@{/}">Back to Home</a>
 
 <script>
+    const picker = document.querySelector(".archetype-picker");
     const searchInput = document.getElementById("archetypeSearch");
     const dropdown = document.getElementById("archetypeDropdown");
     const hiddenInput = document.getElementById("selectedArchetype");
-    const options = document.querySelectorAll(".archetype-option");
+    const options = dropdown.querySelectorAll(".archetype-option");
 
     searchInput.addEventListener("focus", () => {
         dropdown.style.display = "block";
@@ -159,8 +115,10 @@
         dropdown.style.display = "block";
 
         options.forEach(option => {
-            const name = option.dataset.name.toLowerCase();
-            option.style.display = name.includes(value) ? "flex" : "none";
+            option.style.display =
+                option.dataset.name.toLowerCase().includes(value)
+                    ? "flex"
+                    : "none";
         });
     });
 
@@ -173,7 +131,7 @@
     });
 
     document.addEventListener("click", function (e) {
-        if (!document.querySelector(".archetype-picker").contains(e.target)) {
+        if (!picker.contains(e.target)) {
             dropdown.style.display = "none";
         }
     });

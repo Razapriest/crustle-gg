@@ -194,6 +194,7 @@ public class PostController {
         }
 
         model.addAttribute("post", post);
+        model.addAttribute("archetypes", Archetype.values());
 
         if (post.getType().name().equals("DECK")) {
             return "edit-deck-post";
@@ -214,6 +215,13 @@ public class PostController {
                            @RequestParam(required = false) String extraInfo,
                            @RequestParam(required = false) MultipartFile imageFile,
                            @RequestParam(required = false) String description,
+
+                           // TOURNAMENT FIELDS (IMPORTANT: indexed lists)
+                           @RequestParam(required = false) List<String> playerName,
+                           @RequestParam(required = false) List<String> archetype,
+                           @RequestParam(required = false) List<String> deckLink,
+                           @RequestParam(required = false) List<String> playerScore,
+
                            Authentication auth) throws IOException {
 
         Post post = postRepository.findById(id)
@@ -231,6 +239,9 @@ public class PostController {
             post.setImagePath(newImage);
         }
 
+        // =========================
+        // DECK POST
+        // =========================
         if (post.getType() == PostType.DECK) {
             post.setDeckList(deckList);
             post.setExtraInfo(extraInfo);
@@ -240,8 +251,46 @@ public class PostController {
             }
         }
 
-        postRepository.save(post);
+        // =========================
+        // TOURNAMENT POST (FIXED)
+        // =========================
+        if (post.getType() == PostType.TOURNAMENT) {
 
+            post.getEntries().clear();
+
+            if (playerName != null) {
+
+                int placement = 1;
+
+                for (int i = 0; i < playerName.size(); i++) {
+
+                    String name = playerName.get(i);
+                    if (name == null || name.isBlank()) continue;
+
+                    TournamentEntry entry = new TournamentEntry();
+                    entry.setPlayerName(name);
+
+                    if (archetype != null && i < archetype.size()) {
+                        try {
+                            entry.setArchetype(Archetype.valueOf(archetype.get(i)));
+                        } catch (Exception ignored) {}
+                    }
+
+                    if (deckLink != null && i < deckLink.size()) {
+                        entry.setDeckLink(deckLink.get(i));
+                    }
+
+                    if (playerScore != null && i < playerScore.size()) {
+                        entry.setScore(playerScore.get(i));
+                    }
+
+                    entry.setPlacement(placement++);
+                    post.addEntry(entry);
+                }
+            }
+        }
+
+        postRepository.save(post);
         return "redirect:/post/view/" + id;
     }
 

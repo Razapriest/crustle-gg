@@ -2,53 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Create Tournament Post</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 
-    <style>
-        .archetype-picker {
-            position: relative;
-            width: 220px;
-        }
-
-        .archetype-search {
-            width: 100%;
-            padding: 6px;
-            box-sizing: border-box;
-        }
-
-        .archetype-dropdown {
-            border: 1px solid #ccc;
-            max-height: 220px;
-            overflow-y: auto;
-            display: none;
-            position: absolute;
-            width: 100%;
-            background: white;
-            z-index: 1000;
-        }
-
-        .archetype-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px;
-            cursor: pointer;
-        }
-
-        .archetype-option:hover {
-            background-color: #f0f0f0;
-        }
-
-        .archetype-option img {
-            width: 22px;
-            height: 22px;
-            object-fit: contain;
-        }
-    </style>
 </head>
 
 <body>
 
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <h2>Create Tournament Post</h2>
 
@@ -65,9 +25,7 @@
     <input type="text" name="title" placeholder="Tournament Name" required />
     <br><br>
 
-    <!-- ========================= -->
-    <!-- IMAGE UPLOAD (NEW) -->
-    <!-- ========================= -->
+    <!-- IMAGE -->
     <input type="file"
            name="image"
            accept="image/*" />
@@ -100,9 +58,6 @@
     <br>
 
     <button type="button" onclick="addRow()">Add Player</button>
-
-    <br><br>
-
     <button type="submit">Create Tournament</button>
 
 </form>
@@ -117,7 +72,7 @@
     </div>
 </div>
 
-<!-- ROW TEMPLATE -->
+<!-- TEMPLATE -->
 <template id="rowTemplate">
     <tr>
 
@@ -145,16 +100,11 @@
         </td>
 
         <td>
-            <input type="text"
-                   name="deckLink"
-                   placeholder="/post/ID or URL" />
+            <input type="text" name="deckLink" />
         </td>
 
         <td>
-            <input type="text"
-                   name="playerScore"
-                   placeholder="e.g. 3-1-0"
-                   required />
+            <input type="text" name="playerScore" required />
         </td>
 
         <td>
@@ -170,9 +120,7 @@
     function buildDropdown(dropdown) {
         dropdown.innerHTML = "";
 
-        const archetypes = document.querySelectorAll(".archetype-data-item");
-
-        archetypes.forEach(a => {
+        document.querySelectorAll(".archetype-data-item").forEach(a => {
             const option = document.createElement("div");
             option.className = "archetype-option";
 
@@ -229,13 +177,11 @@
     }
 
     function addRow() {
-        const template = document.getElementById("rowTemplate");
-        const clone = template.content.cloneNode(true);
-
+        const clone = document.getElementById("rowTemplate").content.cloneNode(true);
         document.getElementById("body").appendChild(clone);
 
-        const newRow = document.getElementById("body").lastElementChild;
-        setupArchetypePicker(newRow.querySelector(".archetype-picker"));
+        const row = document.getElementById("body").lastElementChild;
+        setupArchetypePicker(row.querySelector(".archetype-picker"));
     }
 
     function moveUp(btn) {
@@ -250,6 +196,7 @@
         if (next) row.parentNode.insertBefore(next, row);
     }
 
+    // init first row
     addRow();
 </script>
 

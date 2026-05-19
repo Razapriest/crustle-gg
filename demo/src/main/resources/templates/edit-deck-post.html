@@ -2,59 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Edit Deck Post</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 
-    <style>
-        .archetype-picker {
-            position: relative;
-            width: 320px;
-        }
-
-        .archetype-search {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-
-        .archetype-dropdown {
-            border: 1px solid #ccc;
-            max-height: 220px;
-            overflow-y: auto;
-            display: none;
-            position: absolute;
-            width: 100%;
-            background: white;
-            z-index: 1000;
-        }
-
-        .archetype-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px;
-            cursor: pointer;
-        }
-
-        .archetype-option:hover {
-            background-color: #f0f0f0;
-        }
-
-        .archetype-option img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-        }
-
-        .preview-img {
-            margin-top: 10px;
-            max-width: 200px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-    </style>
 </head>
+
 <body>
 
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <h2>Edit Deck Post</h2>
 
@@ -70,23 +24,20 @@
            required />
     <br><br>
 
-    <!-- IMAGE UPLOAD -->
+    <!-- IMAGE -->
     <label>Deck Image</label><br>
-
     <input type="file"
            name="imageFile"
            accept="image/*" />
 
-    <br>
+    <br><br>
 
-    <!-- CURRENT IMAGE -->
     <div th:if="${post.imagePath != null}">
         <p>Current image:</p>
         <img th:src="@{'/uploads/' + ${post.imagePath}}"
              class="preview-img" />
     </div>
 
-    <!-- fallback -->
     <div th:if="${post.imagePath == null}">
         <p>Current image:</p>
         <img src="/uploads/default.png"
@@ -107,12 +58,11 @@
     <br><br>
 
     <!-- ARCHETYPE -->
-    <label>Archetype:</label><br>
+    <label>Archetype</label><br>
 
     <div class="archetype-picker">
 
         <input type="text"
-               id="archetypeSearch"
                class="archetype-search"
                placeholder="Search archetype..."
                autocomplete="off"
@@ -121,11 +71,11 @@
 
         <input type="hidden"
                name="archetype"
-               id="selectedArchetype"
+               class="selected-archetype"
                th:value="${post.archetype != null ? post.archetype.name() : ''}"
                required />
 
-        <div id="archetypeDropdown" class="archetype-dropdown">
+        <div class="archetype-dropdown">
 
             <div th:each="a : ${archetypes}"
                  class="archetype-option"
@@ -138,7 +88,6 @@
             </div>
 
         </div>
-
     </div>
 
     <br><br>
@@ -162,39 +111,50 @@
 <a th:href="@{'/post/' + ${post.id}}">← Back</a>
 
 <script>
-    const searchInput = document.getElementById("archetypeSearch");
-    const dropdown = document.getElementById("archetypeDropdown");
-    const hiddenInput = document.getElementById("selectedArchetype");
-    const options = document.querySelectorAll(".archetype-option");
+    function setupArchetypePicker(container) {
+        const search = container.querySelector(".archetype-search");
+        const hidden = container.querySelector(".selected-archetype");
+        const dropdown = container.querySelector(".archetype-dropdown");
 
-    searchInput.addEventListener("focus", () => {
-        dropdown.style.display = "block";
-    });
+        const options = dropdown.querySelectorAll(".archetype-option");
 
-    searchInput.addEventListener("input", function () {
-        const value = this.value.toLowerCase();
-        dropdown.style.display = "block";
+        search.addEventListener("focus", () => {
+            dropdown.style.display = "block";
+        });
+
+        search.addEventListener("input", function () {
+            const value = this.value.toLowerCase();
+            dropdown.style.display = "block";
+
+            options.forEach(option => {
+                option.style.display =
+                    option.dataset.name.toLowerCase().includes(value)
+                        ? "flex"
+                        : "none";
+            });
+        });
 
         options.forEach(option => {
-            option.style.display = option.dataset.name.toLowerCase().includes(value)
-                ? "flex"
-                : "none";
+            option.addEventListener("click", function () {
+                search.value = this.dataset.name;
+                hidden.value = this.dataset.value;
+                dropdown.style.display = "none";
+            });
         });
-    });
 
-    options.forEach(option => {
-        option.addEventListener("click", function () {
-            searchInput.value = this.dataset.name;
-            hiddenInput.value = this.dataset.value;
-            dropdown.style.display = "none";
+        document.addEventListener("click", function (e) {
+            if (!container.contains(e.target)) {
+                dropdown.style.display = "none";
+            }
         });
-    });
+    }
 
-    document.addEventListener("click", function (e) {
-        if (!document.querySelector(".archetype-picker").contains(e.target)) {
-            dropdown.style.display = "none";
-        }
-    });
+    function initAllPickers() {
+        document.querySelectorAll(".archetype-picker")
+            .forEach(setupArchetypePicker);
+    }
+
+    initAllPickers();
 </script>
 
 </body>

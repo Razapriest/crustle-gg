@@ -2,60 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Edit Tournament Post</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 
-    <style>
-        .archetype-picker {
-            position: relative;
-            width: 220px;
-        }
-
-        .archetype-search {
-            width: 100%;
-            padding: 6px;
-            box-sizing: border-box;
-        }
-
-        .archetype-dropdown {
-            border: 1px solid #ccc;
-            max-height: 220px;
-            overflow-y: auto;
-            display: none;
-            position: absolute;
-            width: 100%;
-            background: white;
-            z-index: 1000;
-        }
-
-        .archetype-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px;
-            cursor: pointer;
-        }
-
-        .archetype-option:hover {
-            background-color: #f0f0f0;
-        }
-
-        .archetype-option img {
-            width: 22px;
-            height: 22px;
-            object-fit: contain;
-        }
-
-        .preview-img {
-            margin-top: 10px;
-            width: 150px;
-            height: auto;
-            border-radius: 6px;
-            object-fit: cover;
-        }
-    </style>
 </head>
+
 <body>
 
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <h2>Edit Tournament Post</h2>
 
@@ -70,21 +23,16 @@
            required />
     <br><br>
 
-    <!-- IMAGE UPLOAD -->
-    <label>Change Image</label><br>
+    <!-- IMAGE -->
     <input type="file" name="imageFile" accept="image/*" />
     <br><br>
 
-    <!-- CURRENT IMAGE -->
     <div th:if="${post.imagePath != null}">
-        <p>Current image:</p>
         <img class="preview-img"
              th:src="@{'/uploads/' + ${post.imagePath}}" />
     </div>
 
-    <!-- fallback -->
     <div th:if="${post.imagePath == null}">
-        <p>Current image:</p>
         <img class="preview-img"
              src="/uploads/default.png" />
     </div>
@@ -117,7 +65,6 @@
 
         <tr th:each="e : ${post.entries}">
 
-            <!-- NAME -->
             <td>
                 <input type="text"
                        name="playerName"
@@ -125,7 +72,6 @@
                        required />
             </td>
 
-            <!-- ARCHETYPE -->
             <td>
                 <div class="archetype-picker">
 
@@ -147,22 +93,18 @@
                 </div>
             </td>
 
-            <!-- DECK LINK -->
             <td>
                 <input type="text"
                        name="deckLink"
                        th:value="${e.deckLink}" />
             </td>
 
-            <!-- SCORE -->
             <td>
                 <input type="text"
-                       name="score"
-                       placeholder="3-1-0"
+                       name="playerScore"
                        th:value="${e.score}" />
             </td>
 
-            <!-- ACTIONS -->
             <td>
                 <button type="button" onclick="moveUp(this)">⬆</button>
                 <button type="button" onclick="moveDown(this)">⬇</button>
@@ -184,7 +126,7 @@
 
 </form>
 
-<!-- ARCHETYPE DATA -->
+<!-- ARCHETYPES -->
 <div id="archetypeData" style="display:none;">
     <div th:each="a : ${archetypes}"
          class="archetype-data-item"
@@ -226,7 +168,7 @@
         </td>
 
         <td>
-            <input type="text" name="score" placeholder="3-1-0" />
+            <input type="text" name="playerScore" />
         </td>
 
         <td>
@@ -248,11 +190,12 @@
 
             option.dataset.value = a.dataset.value;
             option.dataset.name = a.dataset.name;
+            option.dataset.icon = a.dataset.icon;
 
             option.innerHTML = `
-                <img src="${a.dataset.icon}">
-                <span>${a.dataset.name}</span>
-            `;
+            <img src="${a.dataset.icon}">
+            <span>${a.dataset.name}</span>
+        `;
 
             dropdown.appendChild(option);
         });
@@ -265,13 +208,7 @@
 
         buildDropdown(dropdown);
 
-        dropdown.querySelectorAll(".archetype-option").forEach(option => {
-            option.addEventListener("click", function () {
-                search.value = this.dataset.name;
-                hidden.value = this.dataset.value;
-                dropdown.style.display = "none";
-            });
-        });
+        const options = dropdown.querySelectorAll(".archetype-option");
 
         search.addEventListener("focus", () => {
             dropdown.style.display = "block";
@@ -279,8 +216,9 @@
 
         search.addEventListener("input", function () {
             const value = this.value.toLowerCase();
+            dropdown.style.display = "block";
 
-            dropdown.querySelectorAll(".archetype-option").forEach(option => {
+            options.forEach(option => {
                 option.style.display =
                     option.dataset.name.toLowerCase().includes(value)
                         ? "flex"
@@ -288,15 +226,24 @@
             });
         });
 
-        document.addEventListener("click", e => {
+        options.forEach(option => {
+            option.addEventListener("click", function () {
+                search.value = this.dataset.name;
+                hidden.value = this.dataset.value;
+                dropdown.style.display = "none";
+            });
+        });
+
+        document.addEventListener("click", function (e) {
             if (!container.contains(e.target)) {
                 dropdown.style.display = "none";
             }
         });
     }
 
-    function initRows() {
-        document.querySelectorAll(".archetype-picker").forEach(setupArchetypePicker);
+    function initAll() {
+        document.querySelectorAll(".archetype-picker")
+            .forEach(setupArchetypePicker);
     }
 
     function addRow() {
@@ -319,7 +266,7 @@
         if (next) row.parentNode.insertBefore(next, row);
     }
 
-    initRows();
+    initAll();
 </script>
 
 </body>
