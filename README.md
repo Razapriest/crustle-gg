@@ -5,7 +5,6 @@ This web application serves as a digital library for Pokemon TCG decks and tourn
 
 Players can:
 - Post their decklists, for personal use, or to make them public and add notes or mini-guides;
-- Record their tournament runs, linking them with decklists, thus showing a specific deck's results;
 - Write up small tournament reports for each tournament and deck, creating a public resource for other players to find and play their lists.
 
 Organizers can:
