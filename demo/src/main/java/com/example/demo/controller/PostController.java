@@ -35,6 +35,19 @@ public class PostController {
         this.userRepository = userRepository;
     }
 
+
+    // =========================
+    // ADMIN CHECK
+    // =========================
+    private boolean isAdmin(Authentication auth) {
+
+        if (auth == null) return false;
+
+        return userRepository.findByUsername(auth.getName())
+                .map(user -> user.getRole() == Role.ADMIN)
+                .orElse(false);
+    }
+
     // =========================
     // VIEW POST
     // =========================
@@ -189,7 +202,10 @@ public class PostController {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (auth == null || !auth.getName().equals(post.getAuthor().getUsername())) {
+        boolean owner = auth != null &&
+                post.getAuthor().getUsername().equals(auth.getName());
+
+        if (!owner && !isAdmin(auth)) {
             return "redirect:/?error=unauthorized";
         }
 
@@ -227,7 +243,10 @@ public class PostController {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (auth == null || !post.getAuthor().getUsername().equals(auth.getName())) {
+        boolean owner = auth != null &&
+                post.getAuthor().getUsername().equals(auth.getName());
+
+        if (!owner && !isAdmin(auth)) {
             return "redirect:/?error=unauthorized";
         }
 
@@ -304,7 +323,10 @@ public class PostController {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (auth == null || !post.getAuthor().getUsername().equals(auth.getName())) {
+        boolean owner = auth != null &&
+                post.getAuthor().getUsername().equals(auth.getName());
+
+        if (!owner && !isAdmin(auth)) {
             return "redirect:/?error=unauthorized";
         }
 
@@ -443,8 +465,10 @@ public class PostController {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-        if (auth == null ||
-                !comment.getAuthor().getUsername().equals(auth.getName())) {
+        boolean owner = auth != null &&
+                comment.getAuthor().getUsername().equals(auth.getName());
+
+        if (!owner && !isAdmin(auth)) {
             return "redirect:/?error=unauthorized";
         }
 

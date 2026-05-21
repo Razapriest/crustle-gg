@@ -1,34 +1,41 @@
 <div th:fragment="navbar" xmlns:sec="http://www.w3.org/1999/xhtml">
     <nav class="navbar">
 
+        <!-- LEFT SIDE -->
         <div class="navbar-left">
             <a href="/">Home</a>
             <a href="/post/create-deck-post">Create Deck Post</a>
             <a href="/post/create-tournament-post">Create Tournament Post</a>
         </div>
 
-        <div class="navbar-right"
-             sec:authorize="isAuthenticated()"
-             th:if="${loggedUser != null}">
+        <!-- RIGHT SIDE -->
+        <div class="navbar-right">
 
-            <a th:href="@{'/user/' + ${loggedUser.username}}"
-               class="navbar-user">
+            <!-- LOGGED IN -->
+            <div sec:authorize="isAuthenticated()">
 
-                <img th:src="${loggedUser.profileImagePath != null
-                              ? '/uploads/' + loggedUser.profileImagePath
-                              : '/uploads/default.png'}" />
+                <a th:href="@{'/user/' + ${loggedUser.username}}"
+                   class="navbar-user">
 
-                <span th:text="${loggedUser.username}"></span>
-            </a>
+                    <img th:src="${loggedUser.profileImagePath != null
+                                  ? '/uploads/' + loggedUser.profileImagePath
+                                  : '/uploads/default.png'}" />
 
-            <form th:action="@{/logout}" method="post">
-                <button type="submit" class="secondary-btn">Logout</button>
-            </form>
-        </div>
+                    <span th:text="${loggedUser.username}"></span>
+                </a>
 
-        <div sec:authorize="isAnonymous()">
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="secondary-btn">Logout</button>
+                </form>
+
+            </div>
+
+            <!-- LOGGED OUT -->
+            <div sec:authorize="isAnonymous()">
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            </div>
+
         </div>
 
     </nav>

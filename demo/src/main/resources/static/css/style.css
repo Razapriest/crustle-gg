@@ -1,73 +1,101 @@
-
 /* =========================
         GLOBAL THEME
 ========================= */
 
-   :root {
-       --light-green: #d5e15a;
-       --brown: #64554a;
-       --orange: #ea683d;
-       --yellow: #f6ba69;
+:root {
+    --light-green: #d5e15a;
+    --brown: #64554a;
+    --orange: #ea683d;
+    --yellow: #f6ba69;
 
-       --bg: #fff8ef;
-       --card: #ffffff;
-       --text: #2d2d2d;
-       --border: #d8c7b8;
-   }
+    --bg: #eaf2c5;          /* greener base (Pokédex feel) */
+    --card: #f7fbe0;       /* soft green-white panels */
+    --text: #2b2b2b;
+    --border: #4f5a3a;     /* darker green border */
+    --accent: #d5e15a;
+}
+
+/* =========================
+   BODY (GAME BOY FEEL)
+========================= */
 
 body {
     margin: 0;
     padding: 0;
-    background-color: var(--bg);
+    background: linear-gradient(180deg, var(--bg), #dfeab0);
     color: var(--text);
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Arial", sans-serif;
+}
+
+/* subtle pixel grid overlay */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+            linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 6px 6px;
+    pointer-events: none;
+    opacity: 0.4;
 }
 
 /* =========================
-   NAVBAR
+   NAVBAR (POKÉDEX HEADER)
 ========================= */
-
 .navbar {
     background-color: var(--brown);
     padding: 14px 24px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-.navbar a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.navbar a:hover {
-    color: var(--light-green);
-}
-
-.navbar-left,
-.navbar-right {
+/* shared grouping */
+.navbar-group {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
+/* RIGHT SIDE */
+.navbar-right {
+    margin-left: auto; /* forces it to the far right */
+}
+
+/* links */
+.navbar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.navbar a:hover {
+    color: var(--light-green);
+    text-shadow: 0 0 6px rgba(213,225,90,0.8);
+}
+
+/* user badge */
 .navbar-user {
     display: flex;
     align-items: center;
     gap: 8px;
     color: white;
     text-decoration: none;
+    background: rgba(0,0,0,0.15);
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--light-green);
 }
 
 .navbar-user img {
-    width: 35px;
-    height: 35px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
+    border: 2px solid var(--light-green);
     object-fit: cover;
-    border: 2px solid var(--yellow);
 }
 
 /* =========================
@@ -80,25 +108,30 @@ body {
     padding: 20px;
 }
 
-.card {
+/* main UI panels (Pokédex card style) */
+.card,
+.post-card,
+.column {
     background: var(--card);
+    border: 3px solid var(--border);
     border-radius: 14px;
-    padding: 20px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-    border: 2px solid var(--border);
+
+    box-shadow: 0 6px 0 rgba(0,0,0,0.12);
 }
 
 /* =========================
-   HEADINGS
+   HEADINGS (GAME UI STYLE)
 ========================= */
 
 h1, h2, h3, h4 {
     color: var(--brown);
     margin-top: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* =========================
-   INPUTS
+   INPUTS (GAME UI FIELDS)
 ========================= */
 
 input[type="text"],
@@ -108,10 +141,11 @@ textarea,
 select {
     width: 100%;
     padding: 10px;
-    border-radius: 8px;
+    border-radius: 10px;
+
     border: 2px solid var(--border);
-    background: white;
-    box-sizing: border-box;
+    background: #ffffff;
+
     font-size: 14px;
 }
 
@@ -119,45 +153,43 @@ input:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    border-color: var(--orange);
-}
-
-textarea {
-    resize: vertical;
+    border-color: var(--light-green);
+    box-shadow: 0 0 6px rgba(213,225,90,0.8);
 }
 
 /* =========================
-   BUTTONS
+   BUTTONS (RETRO GAME BUTTON)
 ========================= */
 
 button,
 input[type="submit"] {
-    background-color: var(--orange);
+    background: linear-gradient(180deg, var(--orange), #d4552e);
     color: white;
-    border: none;
+
+    border: 2px solid var(--brown);
     padding: 10px 18px;
-    border-radius: 8px;
+    border-radius: 10px;
+
     cursor: pointer;
     font-weight: bold;
-    transition: 0.2s;
+
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+    transition: 0.15s;
 }
 
 button:hover,
 input[type="submit"]:hover {
-    background-color: #cf5730;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.25);
 }
 
+/* secondary button */
 .secondary-btn {
-    background-color: var(--brown);
-}
-
-.secondary-btn:hover {
-    background-color: #51443a;
+    background: var(--brown);
 }
 
 /* =========================
-   TABLES
+   TABLES (DEX LIST STYLE)
 ========================= */
 
 table {
@@ -166,13 +198,14 @@ table {
     background: white;
     border-radius: 12px;
     overflow: hidden;
+    border: 2px solid var(--border);
 }
 
 th {
-    background-color: var(--light-green);
+    background: var(--light-green);
     color: var(--brown);
     padding: 12px;
-    text-align: left;
+    text-transform: uppercase;
 }
 
 td {
@@ -181,60 +214,49 @@ td {
 }
 
 tr:hover {
-    background-color: #fff7df;
+    background: #f2f7c9;
 }
 
 /* =========================
-   POST CARDS
+   POST CARDS (POKÉMON CARD FEEL)
 ========================= */
 
 .post-card {
-    background: white;
-    border: 2px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 16px;
+    margin-bottom: 18px;
     transition: 0.2s;
 }
 
 .post-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 0 rgba(0,0,0,0.15);
+    border-color: var(--light-green);
 }
 
 .post-card img {
     max-width: 100%;
     border-radius: 12px;
+    border: 2px solid var(--border);
 }
 
 /* =========================
-   COMMENTS
+   COMMENTS (GYM MESSAGE BOX)
 ========================= */
 
 .comment {
-    background: #fffdf8;
-    border-left: 5px solid var(--yellow);
+    background: #f7fbe0;
+    border-left: 6px solid var(--light-green);
     padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 12px;
+    border-radius: 10px;
 }
 
 /* =========================
-   PROFILE
+   PROFILE (TRAINER CARD)
 ========================= */
 
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
 .profile-header img {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid var(--orange);
+    border: 4px solid var(--light-green);
+    box-shadow: 0 0 0 3px var(--brown);
 }
 
 /* =========================
@@ -245,15 +267,10 @@ tr:hover {
     border: 2px solid var(--border);
     border-radius: 10px;
     background: white;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-}
-
-.archetype-option {
-    transition: 0.15s;
 }
 
 .archetype-option:hover {
-    background-color: #fff0d6;
+    background: #e8f3a3;
 }
 
 /* =========================
@@ -261,11 +278,12 @@ tr:hover {
 ========================= */
 
 a {
-    color: var(--orange);
+    color: var(--brown);
+    font-weight: bold;
 }
 
 a:hover {
-    color: #cf5730;
+    color: var(--orange);
 }
 
 /* =========================
@@ -274,26 +292,7 @@ a:hover {
 
 .preview-img {
     border-radius: 12px;
-    border: 3px solid var(--yellow);
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 768px) {
-
-    .page-container {
-        padding: 10px;
-    }
-
-    table {
-        font-size: 14px;
-    }
-
-    .navbar {
-        flex-wrap: wrap;
-    }
+    border: 3px solid var(--light-green);
 }
 
 /* =========================
@@ -308,20 +307,20 @@ a:hover {
 
 .column {
     flex: 1;
-    min-width: 0;
+    padding: 12px;
 }
 
-/* optional: visual separation */
+/* Pokédex divider */
 .column:first-child {
-    border-right: 2px solid var(--border);
-    padding-right: 12px;
+    border-right: 3px solid var(--border);
 }
 
-.column:last-child {
-    padding-left: 12px;
-}
+/* =========================
+   SMALL RETRO TOUCHES
+========================= */
 
-/* make headings nicer in columns */
-.column h2 {
-    margin-bottom: 16px;
+/* fake “UI press” effect */
+button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.2);
 }

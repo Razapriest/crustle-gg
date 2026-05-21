@@ -26,8 +26,18 @@ public class UserController {
 
     public UserController(UserRepository userRepository,
                           PostRepository postRepository) {
+
         this.userRepository = userRepository;
         this.postRepository = postRepository;
+    }
+
+    // =========================
+    // HELPER
+    // =========================
+    private boolean canEditProfile(User targetUser, User loggedUser) {
+
+        return targetUser.getId().equals(loggedUser.getId())
+                || loggedUser.isAdmin();
     }
 
     // =========================
@@ -41,18 +51,25 @@ public class UserController {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Post> posts = postRepository.findByAuthorOrderByCreatedAtDesc(user);
+        List<Post> posts =
+                postRepository.findByAuthorOrderByCreatedAtDesc(user);
 
         int score = posts.stream()
                 .mapToInt(Post::getLikes)
                 .sum();
 
-        String currentUser = auth != null ? auth.getName() : null;
+        User loggedUser = null;
+
+        if (auth != null) {
+            loggedUser = userRepository
+                    .findByUsername(auth.getName())
+                    .orElse(null);
+        }
 
         model.addAttribute("profileUser", user);
         model.addAttribute("posts", posts);
         model.addAttribute("score", score);
-        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("loggedUser", loggedUser);
 
         return "profile";
     }
@@ -65,14 +82,23 @@ public class UserController {
                                   Authentication auth,
                                   Model model) {
 
-        if (auth == null || !auth.getName().equals(username)) {
+        if (auth == null) {
+            return "redirect:/login";
+        }
+
+        User loggedUser = userRepository
+                .findByUsername(auth.getName())
+                .orElseThrow();
+
+        User targetUser = userRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!canEditProfile(targetUser, loggedUser)) {
             return "redirect:/?error=unauthorized";
         }
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        model.addAttribute("user", user);
+        model.addAttribute("user", targetUser);
 
         return "edit-profile";
     }
@@ -82,13 +108,23 @@ public class UserController {
     // =========================
     private String saveImage(MultipartFile file) throws IOException {
 
-        if (file == null || file.isEmpty()) return null;
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
 
         File dir = new File(UPLOAD_DIR);
-        if (!dir.exists()) dir.mkdirs();
 
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        File destination = new File(UPLOAD_DIR + fileName);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        String fileName =
+                UUID.randomUUID()
+                        + "_"
+                        + file.getOriginalFilename();
+
+        File destination =
+                new File(UPLOAD_DIR + fileName);
 
         file.transferTo(destination);
 
@@ -101,26 +137,36 @@ public class UserController {
     @PostMapping("/user/edit/{username}")
     public String editProfile(@PathVariable String username,
                               @RequestParam String description,
-                              @RequestParam(required = false) MultipartFile profileImage,
+                              @RequestParam(required = false)
+                              MultipartFile profileImage,
                               Authentication auth) throws IOException {
 
-        if (auth == null || !auth.getName().equals(username)) {
-            return "redirect:/?error=unauthorized";
+        if (auth == null) {
+            return "redirect:/login";
         }
 
-        User user = userRepository.findByUsername(username)
+        User loggedUser = userRepository
+                .findByUsername(auth.getName())
+                .orElseThrow();
+
+        User targetUser = userRepository
+                .findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!canEditProfile(targetUser, loggedUser)) {
+            return "redirect:/?error=unauthorized";
+        }
 
         String uploadedImage = saveImage(profileImage);
 
         if (uploadedImage != null) {
-            user.setProfileImagePath(uploadedImage);
+            targetUser.setProfileImagePath(uploadedImage);
         }
 
-        user.setDescription(description);
+        targetUser.setDescription(description);
 
-        userRepository.save(user);
+        userRepository.save(targetUser);
 
-        return "redirect:/user/" + username;
+        return "redirect:/user/" + targetUser.getUsername();
     }
 }

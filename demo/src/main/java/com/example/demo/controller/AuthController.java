@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,7 @@ public class AuthController {
 
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder) {
+
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -43,39 +45,53 @@ public class AuthController {
                                @RequestParam String password,
                                @RequestParam(required = false) MultipartFile profileImage) {
 
+        // username already exists
         if (userRepository.findByUsername(username).isPresent()) {
             return "redirect:/register?error";
         }
 
         User user = new User();
+
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRole("ROLE_USER");
+
+        // =========================
+        // DEFAULT ROLE
+        // =========================
+        user.setRole(Role.USER);
+
         user.setDescription("");
 
         // =========================
-        // IMAGE UPLOAD LOGIC
+        // IMAGE UPLOAD
         // =========================
-        String profilePath;
+
+        String profilePath = "/images/default-avatar.png";
 
         if (profileImage != null && !profileImage.isEmpty()) {
-            try {
-                File dir = new File(UPLOAD_DIR);
-                if (!dir.exists()) dir.mkdirs();
 
-                String filename = UUID.randomUUID()
-                        + "_" + profileImage.getOriginalFilename();
+            try {
+
+                File dir = new File(UPLOAD_DIR);
+
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+
+                String filename =
+                        UUID.randomUUID()
+                                + "_"
+                                + profileImage.getOriginalFilename();
 
                 Path path = Paths.get(UPLOAD_DIR, filename);
+
                 Files.write(path, profileImage.getBytes());
 
                 profilePath = "/uploads/" + filename;
 
             } catch (IOException e) {
-                profilePath = "/images/default-avatar.png";
+                e.printStackTrace();
             }
-        } else {
-            profilePath = "/images/default-avatar.png";
         }
 
         user.setProfileImagePath(profilePath);

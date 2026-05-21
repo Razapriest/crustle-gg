@@ -16,11 +16,15 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String role;
+    // =========================
+    // ROLE ENUM
+    // =========================
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 
     // =========================
-    // STORES FILE PATH (NOT URL)
-    // Example: /uploads/user_12.png
+    // PROFILE IMAGE
     // =========================
     @Column(length = 500)
     private String profileImagePath;
@@ -56,11 +60,11 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
@@ -84,9 +88,19 @@ public class User {
     // SAFE FALLBACK FOR UI
     // =========================
     public String getProfileImage() {
+
         if (profileImagePath == null || profileImagePath.isBlank()) {
             return "/images/default-avatar.png";
         }
+
         return profileImagePath;
+    }
+
+    // =========================
+    // HELPER METHODS
+    // =========================
+
+    public boolean isAdmin() {
+        return role == Role.ADMIN;
     }
 }
