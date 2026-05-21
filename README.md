@@ -10,6 +10,6 @@ Players can:
 
 Organizers can:
 - Record tournament results, by adding each player and deck into the system;
-- Generate a standings list, exportable as a csv, with names, images, deck names and scores (and, where applicable, decklists).
+- Generate a standings list, with names, images, deck names and scores (and, where applicable, decklists).
 
 This project aims to create a digital library of decks, different from the already existing limitlesstcg, which only records official, large-scale regional-level tournaments. With Crustle.gg, players would be able to post their locals lists, whether secret home-brew meta decks, for fun decks, or just netdecked lists, while also keeping track of their matchups, win-lose stats, changes to the lists and other notable things. Players would also be able to write up mini-guides for their decks, or respond to questions left by others regarding their deck.
